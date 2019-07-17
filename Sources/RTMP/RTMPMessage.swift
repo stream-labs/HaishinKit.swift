@@ -348,7 +348,7 @@ final class RTMPCommandMessage: RTMPMessage {
             case "close":
                 connection.close(isDisconnected: true)
             default:
-                connection.dispatch(Event.RTMP_STATUS, bubbles: false, data: arguments.first)
+                connection.dispatch(Event.RTMP_STATUS, bubbles: false, data: arguments.first ?? nil)
             }
             return
         }
