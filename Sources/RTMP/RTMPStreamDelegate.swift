@@ -13,4 +13,6 @@ public protocol RTMPStreamDelegate: class {
     optional func outputVideo(_ buffer: CMSampleBuffer)
 
     func clear()
+    
+    func didChangeReadyState(_ state: RTMPStream.ReadyState)
 }

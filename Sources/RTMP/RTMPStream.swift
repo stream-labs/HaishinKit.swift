@@ -203,8 +203,9 @@ open class RTMPStream: NetStream {
         case live
         case localRecord
     }
-
-    enum ReadyState: UInt8 {
+    
+    @objc
+    public enum ReadyState: UInt8 {
         case initialized = 0
         case open = 1
         case play = 2
@@ -325,6 +326,8 @@ open class RTMPStream: NetStream {
             default:
                 break
             }
+	
+			delegate?.didChangeReadyState(self.readyState)
         }
     }
     private var isBeingClosed: Bool = false
