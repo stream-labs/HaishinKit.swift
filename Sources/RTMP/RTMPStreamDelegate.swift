@@ -15,4 +15,6 @@ public protocol RTMPStreamDelegate: class {
     func clear()
     
     func didChangeReadyState(_ state: RTMPStream.ReadyState)
+
+	func didChangeStreamInfo(_ stream: RTMPStream)
 }

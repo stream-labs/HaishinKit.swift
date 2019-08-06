@@ -601,6 +601,8 @@ open class RTMPStream: NetStream {
         currentFPS = frameCount
         frameCount = 0
         info.on(timer: timer)
+
+		self.delegate?.didChangeStreamInfo(self)
     }
 
     @objc
