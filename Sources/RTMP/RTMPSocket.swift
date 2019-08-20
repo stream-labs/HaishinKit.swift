@@ -201,7 +201,8 @@ final class RTMPSocket: RTMPSocketCompatible {
     }
 
     func didTimeout() {
-        deinitConnection(isDisconnected: false)
+        deinitConnection(isDisconnected: true)
+        close(isDisconnected: true)
         delegate?.dispatch(Event.IO_ERROR, bubbles: false, data: nil)
         logger.warn("connection timedout")
     }
