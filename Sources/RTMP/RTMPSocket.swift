@@ -99,7 +99,8 @@ final class RTMPSocket: NetSocket, RTMPSocketCompatible {
     }
 
     override func didTimeout() {
-        deinitConnection(isDisconnected: false)
+        deinitConnection(isDisconnected: true)
+        close(isDisconnected: true)
         delegate?.dispatch(.ioError, bubbles: false, data: nil)
         logger.warn("connection timedout")
     }
