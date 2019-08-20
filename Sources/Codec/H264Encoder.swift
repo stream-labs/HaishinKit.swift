@@ -78,7 +78,7 @@ final class H264Encoder: NSObject {
             guard bitrate != oldValue else {
                 return
             }
-            setProperty(kVTCompressionPropertyKey_AverageBitRate, Int(bitrate) as CFTypeRef)
+            _ = VTCompressionSessionPropertyKey.averageBitRate.setProperty(_session, Int(bitrate) as CFTypeRef)
         }
     }
 
@@ -91,7 +91,7 @@ final class H264Encoder: NSObject {
                 invalidateSession = true
                 return
             }
-            setProperty(kVTCompressionPropertyKey_DataRateLimits, dataRateLimits as CFTypeRef)
+            _ = VTCompressionSessionPropertyKey.dataRateLimits.setProperty(_session, dataRateLimits as CFTypeRef)
         }
     }
     @objc var profileLevel: String = kVTProfileLevel_H264_Baseline_3_1 as String {
@@ -107,7 +107,7 @@ final class H264Encoder: NSObject {
             guard maxKeyFrameIntervalDuration != oldValue else {
                 return
             }
-            setProperty(kVTCompressionPropertyKey_MaxKeyFrameIntervalDuration, NSNumber(value: maxKeyFrameIntervalDuration))
+            _ = VTCompressionSessionPropertyKey.maxKeyFrameIntervalDuration.setProperty(_session, NSNumber(value: maxKeyFrameIntervalDuration))
         }
     }
 
@@ -118,7 +118,7 @@ final class H264Encoder: NSObject {
             guard expectedFPS != oldValue else {
                 return
             }
-            setProperty(kVTCompressionPropertyKey_ExpectedFrameRate, NSNumber(value: expectedFPS))
+            _ = VTCompressionSessionPropertyKey.expectedFrameRate.setProperty(_session, NSNumber(value: expectedFPS))
         }
     }
     var formatDescription: CMFormatDescription? {
@@ -132,18 +132,6 @@ final class H264Encoder: NSObject {
     weak var delegate: VideoEncoderDelegate?
 
     private(set) var isRunning: Atomic<Bool> = .init(false)
-    private var supportedProperty: [AnyHashable: Any]? {
-        didSet {
-            guard logger.isEnabledFor(level: .info) else {
-                return
-            }
-            var keys: [String] = []
-            for (key, _) in supportedProperty ?? [:] {
-                keys.append(key.description)
-            }
-            logger.info(keys.joined(separator: ", "))
-        }
-    }
     private(set) var status: OSStatus = noErr
     private var attributes: [NSString: AnyObject] {
         var attributes: [NSString: AnyObject] = H264Encoder.defaultAttributes
@@ -224,7 +212,6 @@ final class H264Encoder: NSObject {
                 invalidateSession = false
                 status = VTSessionSetProperties(_session!, propertyDictionary: properties as CFDictionary)
                 status = VTCompressionSessionPrepareToEncodeFrames(_session!)
-                supportedProperty = _session?.copySupportedPropertyDictionary()
             }
             return _session
         }
@@ -261,19 +248,6 @@ final class H264Encoder: NSObject {
         }
     }
 
-    private func setProperty(_ key: CFString, _ value: CFTypeRef?) {
-        lockQueue.async {
-            guard let session: VTCompressionSession = self._session else {
-                return
-            }
-            self.status = VTSessionSetProperty(
-                session,
-                key: key,
-                value: value
-            )
-        }
-    }
-
 #if os(iOS)
     @objc
     private func applicationWillEnterForeground(_ notification: Notification) {
@@ -302,9 +276,7 @@ extension H264Encoder: Running {
     // MARK: Running
     func startRunning() {
         lockQueue.async {
-            self.isRunning.mutate { value in
-                value = true
-            }
+            self.isRunning.mutate { $0 = true }
 #if os(iOS)
             NotificationCenter.default.addObserver(
                 self,
@@ -330,9 +302,8 @@ extension H264Encoder: Running {
 #if os(iOS)
             NotificationCenter.default.removeObserver(self)
 #endif
-            self.isRunning.mutate { value in
-                value = false
-            }
+            OSAtomicAnd32Barrier(0, &self.locked)
+            self.isRunning.mutate { $0 = false }
         }
     }
 }

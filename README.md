@@ -45,7 +45,7 @@
 - [x] Support "Allow app extension API only" option
 - [x] Support GPUImage framework (~> 0.5.12)
   - https://github.com/shogo4405/GPUHaishinKit.swift/blob/master/README.md
-- [ ] ~~Objectiv-C Bridging~~
+- [ ] ~~Objective-C Bridging~~
 
 ## Requirements
 |-|iOS|OSX|tvOS|XCode|Swift|CocoaPods|Carthage|
@@ -73,7 +73,7 @@ source 'https://github.com/CocoaPods/Specs.git'
 use_frameworks!
 
 def import_pods
-    pod 'HaishinKit', '~> 0.11.4'
+    pod 'HaishinKit', '~> 0.11.6'
 end
 
 target 'Your Target'  do
@@ -83,7 +83,7 @@ end
 ```
 ### Carthage
 ```
-github "shogo4405/HaishinKit.swift" ~> 0.11.4
+github "shogo4405/HaishinKit.swift" ~> 0.11.6
 ```
 
 ## License

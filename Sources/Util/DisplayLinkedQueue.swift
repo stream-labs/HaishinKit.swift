@@ -47,6 +47,12 @@ final class DisplayLinkedQueue: NSObject {
 
     @objc
     private func update(displayLink: DisplayLink) {
+        lockQueue.async { [weak self] in
+            self?.execute(displayLink: displayLink)
+        }
+    }
+
+    private func execute(displayLink: DisplayLink) {
         guard let first: CMSampleBuffer = buffers.first, isReady else {
             return
         }
@@ -57,11 +63,9 @@ final class DisplayLinkedQueue: NSObject {
             clockTime = first.presentationTimeStamp.seconds
         }
         if first.presentationTimeStamp.seconds - clockTime <= displayLink.timestamp - mediaTime {
-            lockQueue.async {
-                self.buffers.removeFirst()
-                if self.buffers.isEmpty {
-                    self.delegate?.empty()
-                }
+            buffers.removeFirst()
+            if buffers.isEmpty {
+                delegate?.empty()
             }
             delegate?.queue(first)
         }
@@ -78,9 +82,7 @@ extension DisplayLinkedQueue: Running {
             self.mediaTime = 0
             self.clockTime = 0
             self.displayLink = DisplayLink(target: self, selector: #selector(self.update(displayLink:)))
-            self.isRunning.mutate { value in
-                value = true
-            }
+            self.isRunning.mutate { $0 = true }
         }
     }
 
@@ -91,9 +93,7 @@ extension DisplayLinkedQueue: Running {
             }
             self.displayLink = nil
             self.buffers.removeAll()
-            self.isRunning.mutate { value in
-                value = false
-            }
+            self.isRunning.mutate { $0 = false }
         }
     }
 }

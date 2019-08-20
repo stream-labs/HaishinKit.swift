@@ -629,7 +629,7 @@ final class RTMPVideoMessage: RTMPMessage {
             return
         }
         OSAtomicAdd64(Int64(payload.count), &stream.info.byteCount)
-        guard FLVTagType.video.headerSize < payload.count else {
+        guard FLVTagType.video.headerSize <= payload.count else {
             return
         }
         switch payload[1] {
@@ -675,6 +675,7 @@ final class RTMPVideoMessage: RTMPMessage {
                 dataLength: length,
                 flags: 0,
                 blockBufferOut: &blockBuffer) == noErr else {
+                stream.mixer.videoIO.decoder.needsSync.mutate { $0 = true }
                 return
             }
             guard CMBlockBufferReplaceDataBytes(
@@ -701,7 +702,10 @@ final class RTMPVideoMessage: RTMPMessage {
                 sampleBufferOut: &sampleBuffer) == noErr else {
                 return
             }
-            status = stream.mixer.videoIO.decoder.decodeSampleBuffer(sampleBuffer!)
+            if let sampleBuffer = sampleBuffer {
+                sampleBuffer.isNotSync = !(payload[0] >> 4 == FLVFrameType.key.rawValue)
+                status = stream.mixer.videoIO.decoder.decodeSampleBuffer(sampleBuffer)
+            }
             if stream.mixer.videoIO.queue.locked.value {
                 stream.mixer.videoIO.queue.locked.mutate { value in
                     value = timestamp != 0

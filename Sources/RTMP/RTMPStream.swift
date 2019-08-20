@@ -330,8 +330,6 @@ open class RTMPStream: NetStream {
 			delegate?.didChangeReadyState(self.readyState)
         }
     }
-    private var isBeingClosed: Bool = false
-
     var audioTimestamp: Double = 0
     var videoTimestamp: Double = 0
     private(set) var muxer = RTMPMuxer()
@@ -342,6 +340,7 @@ open class RTMPStream: NetStream {
     private var audioWasSent: Bool = false
     private var videoWasSent: Bool = false
     private var howToPublish: RTMPStream.HowToPublish = .live
+    private var isBeingClosed: Bool = false
     private var rtmpConnection: RTMPConnection
 
     public init(connection: RTMPConnection) {
@@ -698,12 +697,12 @@ extension RTMPStream: RTMPMuxerDelegate {
 
 extension RTMPStream: AVMixerDelegate {
     // MARK: AVMixerDelegate
-    func outputVideo(_ buffer: CMSampleBuffer) {
+    func didOutputVideo(_ buffer: CMSampleBuffer) {
         frameCount += 1
-        delegate?.outputVideo?(buffer)
+        delegate?.didOutputVideo?(buffer)
     }
 
-    func outputAudio(_ buffer: AVAudioPCMBuffer, presentationTimeStamp: CMTime) {
-        delegate?.outputAudio?(buffer, presentationTimeStamp: presentationTimeStamp)
+    func didOutputAudio(_ buffer: AVAudioPCMBuffer, presentationTimeStamp: CMTime) {
+        delegate?.didOutputAudio?(buffer, presentationTimeStamp: presentationTimeStamp)
     }
 }

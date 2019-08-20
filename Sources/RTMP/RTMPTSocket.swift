@@ -3,10 +3,11 @@ import Foundation
 final class RTMPTSocket: NSObject, RTMPSocketCompatible {
     static let contentType: String = "application/x-fcs"
 
-    var timeout: Int64 = 0
+    var timeout: Int = 0
     var chunkSizeC: Int = RTMPChunk.defaultSize
     var chunkSizeS: Int = RTMPChunk.defaultSize
     var inputBuffer = Data()
+    var qualityOfService: DispatchQoS = .default
     var securityLevel: StreamSocketSecurityLevel = .none
     weak var delegate: RTMPSocketDelegate?
     var connected: Bool = false {

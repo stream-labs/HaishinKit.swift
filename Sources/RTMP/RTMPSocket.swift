@@ -1,17 +1,18 @@
 import Foundation
 
 protocol RTMPSocketCompatible: class {
-    var timeout: Int64 { get set }
+    var timeout: Int { get set }
+    var delegate: RTMPSocketDelegate? { get set }
     var connected: Bool { get }
     var timestamp: TimeInterval { get }
     var chunkSizeC: Int { get set }
     var chunkSizeS: Int { get set }
+    var inputBuffer: Data { get set }
     var totalBytesIn: Int64 { get }
     var totalBytesOut: Int64 { get }
     var queueBytesOut: Int64 { get }
-    var inputBuffer: Data { get set }
     var securityLevel: StreamSocketSecurityLevel { get set }
-    var delegate: RTMPSocketDelegate? { get set }
+    var qualityOfService: DispatchQoS { get set }
 
     @discardableResult
     func doOutput(chunk: RTMPChunk, locked: UnsafeMutablePointer<UInt32>?) -> Int
@@ -84,18 +85,6 @@ final class RTMPSocket: NetSocket, RTMPSocketCompatible {
             logger.trace(chunk)
         }
         return chunk.message!.length
-    }
-
-    override func connect(withName: String, port: Int) {
-        inputQueue.async {
-            Stream.getStreamsToHost(
-                withName: withName,
-                port: port,
-                inputStream: &self.inputStream,
-                outputStream: &self.outputStream
-            )
-            self.initConnection()
-        }
     }
 
     override func listen() {
