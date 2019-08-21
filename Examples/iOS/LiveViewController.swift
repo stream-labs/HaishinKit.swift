@@ -134,7 +134,8 @@ final class LiveViewController: UIViewController {
         } else {
             UIApplication.shared.isIdleTimerDisabled = true
             rtmpConnection.addEventListener(Event.RTMP_STATUS, selector: #selector(rtmpStatusHandler), observer: self)
-            rtmpConnection.connect(Preference.defaultInstance.uri!)
+//            rtmpConnection.connect(Preference.defaultInstance.uri!)
+            rtmpConnection.connect("rtmp://test.tv")
             publish.setTitle("■", for: [])
         }
         publish.isSelected = !publish.isSelected
@@ -155,8 +156,11 @@ final class LiveViewController: UIViewController {
             guard retryCount <= LiveViewController.maxRetryCount else {
                 return
             }
-            Thread.sleep(forTimeInterval: pow(2.0, Double(retryCount)))
-            rtmpConnection.connect(Preference.defaultInstance.uri!)
+//            Thread.sleep(forTimeInterval: pow(2.0, Double(retryCount)))
+            Thread.sleep(forTimeInterval: 2)
+//            rtmpConnection.connect(Preference.defaultInstance.uri!)
+            let url = "rtmp://live-mia.twitch.tv/app/<REDACTED>"
+            rtmpConnection.connect(url)
             retryCount += 1
         default:
             break
