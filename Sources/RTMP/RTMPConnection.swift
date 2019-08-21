@@ -304,9 +304,10 @@ open class RTMPConnection: EventDispatcher {
             socket = socket is RTMPTSocket ? socket : RTMPTSocket()
         default:
             socket = { () -> RTMPSocketCompatible in
-                if socket is RTMPSocket {
+                /*if socket is RTMPSocket {
                     return socket
-                }
+                }*/
+
                 if #available(iOS 12.0, macOS 10.14, tvOS 12, *) {
                     if let params = self._nwParams {
                         return RTMPSocket(params)

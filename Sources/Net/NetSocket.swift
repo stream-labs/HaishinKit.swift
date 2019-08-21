@@ -164,6 +164,9 @@ open class NetSocket: NSObject, NetSocketCompatible {
     }
 
     func deinitConnection(isDisconnected: Bool) {
+		//Temp Fix. Line:163 in initConnection() (connected = false) is called too late because `didSetConnected` handler is nil
+		connected = false
+
         timeoutHandler = nil
         inputHandler = nil
         didSetTotalBytesIn = nil
