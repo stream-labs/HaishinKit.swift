@@ -515,7 +515,7 @@ extension RTMPConnection: RTMPSocketDelegate {
         ), locked: nil)
         sequence += 1
     }
-
+    
     func listen(_ data: Data) {
         guard let chunk: RTMPChunk = currentChunk ?? RTMPChunk(data, size: socket.chunkSizeC) else {
             socket.inputBuffer.append(data)
