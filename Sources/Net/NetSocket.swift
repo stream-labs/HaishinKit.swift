@@ -181,7 +181,7 @@ open class NetSocket: NSObject, NetSocketCompatible {
         outputStream?.remove(from: runloop!, forMode: .default)
         outputStream?.delegate = nil
         outputStream = nil
-        buffer.removeAll()
+        buffer = [UInt8](repeating: 0, count: windowSizeC)
     }
 
     private func doInput() {
