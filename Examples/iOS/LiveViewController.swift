@@ -130,12 +130,13 @@ final class LiveViewController: UIViewController {
             UIApplication.shared.isIdleTimerDisabled = false
             rtmpConnection.close()
             rtmpConnection.removeEventListener(Event.RTMP_STATUS, selector: #selector(rtmpStatusHandler), observer: self)
+            rtmpConnection.removeEventListener(Event.IO_ERROR, selector: #selector(rtmpErrorHandler), observer: self)
             publish.setTitle("●", for: [])
         } else {
             UIApplication.shared.isIdleTimerDisabled = true
             rtmpConnection.addEventListener(Event.RTMP_STATUS, selector: #selector(rtmpStatusHandler), observer: self)
-//            rtmpConnection.connect(Preference.defaultInstance.uri!)
-            rtmpConnection.connect("rtmp://test.tv")
+            rtmpConnection.addEventListener(Event.IO_ERROR, selector: #selector(rtmpErrorHandler), observer: self)
+            rtmpConnection.connect(Preference.defaultInstance.uri!)
             publish.setTitle("■", for: [])
         }
         publish.isSelected = !publish.isSelected
@@ -156,14 +157,21 @@ final class LiveViewController: UIViewController {
             guard retryCount <= LiveViewController.maxRetryCount else {
                 return
             }
-//            Thread.sleep(forTimeInterval: pow(2.0, Double(retryCount)))
-            Thread.sleep(forTimeInterval: 2)
-//            rtmpConnection.connect(Preference.defaultInstance.uri!)
-            let url = "rtmp://live-mia.twitch.tv/app/<REDACTED>"
-            rtmpConnection.connect(url)
+            Thread.sleep(forTimeInterval: pow(2.0, Double(retryCount)))
+            rtmpConnection.connect(Preference.defaultInstance.uri!)
             retryCount += 1
         default:
             break
+        }
+    }
+
+    @objc
+    private func rtmpErrorHandler(_ notification: Notification) {
+        let e = Event.from(notification)
+        print("rtmpErrorHandler: \(e.description)")
+
+        DispatchQueue.main.async {
+            self.rtmpConnection.connect(Preference.defaultInstance.uri!)
         }
     }
 
