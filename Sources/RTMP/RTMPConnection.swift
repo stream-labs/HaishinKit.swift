@@ -292,9 +292,13 @@ open class RTMPConnection: EventDispatcher {
 
     /// Creates a two-way connection to an application on RTMP Server.
     open func connect(_ command: String, arguments: Any?...) {
-        guard let uri = URL(string: command), let scheme: String = uri.scheme, !connected && Self.supportedProtocols.contains(scheme) else {
-            return
-        }
+        guard let uri = URL(string: command),
+			let scheme: String = uri.scheme?.lowercased(),
+			!connected,
+            Self.supportedProtocols.contains(scheme),
+			let host = uri.host
+        else { return }
+		
         self.uri = uri
         self.arguments = arguments
         timer = Timer(timeInterval: 1.0, target: self, selector: #selector(on(timer:)), userInfo: nil, repeats: true)
@@ -318,9 +322,9 @@ open class RTMPConnection: EventDispatcher {
             socket.outputBufferSize = outputBufferSize
         }
         socket.setProperty(parameters, forKey: "parameters")
-        let secure = uri.scheme == "rtmps" || uri.scheme == "rtmpts"
+        let secure = scheme == "rtmps" || scheme == "rtmpts"
         socket.securityLevel = secure ? .negotiatedSSL : .none
-        socket.connect(withName: uri.host!, port: uri.port ?? (secure ? Self.defaultSecurePort : Self.defaultPort))
+        socket.connect(withName: host, port: uri.port ?? (secure ? Self.defaultSecurePort : Self.defaultPort))
     }
 
     /// Closes the connection from the server.
