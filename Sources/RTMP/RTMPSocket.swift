@@ -88,14 +88,14 @@ final class RTMPSocket: NetSocket, RTMPSocketCompatible {
         super.initConnection()
     }
 
-    override func deinitConnection(isDisconnected: Bool) {
+    override func deinitConnection(isDisconnected: Bool, completion: @escaping (() -> Void) = {}) {
         if isDisconnected {
             let data: ASObject = (readyState == .handshakeDone) ?
                 RTMPConnection.Code.connectClosed.data("") : RTMPConnection.Code.connectFailed.data("")
             events.append(Event(type: .rtmpStatus, bubbles: false, data: data))
         }
         readyState = .closing
-        super.deinitConnection(isDisconnected: isDisconnected)
+        super.deinitConnection(isDisconnected: isDisconnected, completion: completion)
     }
 
     override func didTimeout() {
