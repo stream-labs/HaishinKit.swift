@@ -28,7 +28,11 @@ open class NetSocket: NSObject {
     private lazy var outputQueue = DispatchQueue(label: "com.haishinkit.HaishinKit.NetSocket.output", qos: qualityOfService)
 
     public func connect(withName: String, port: Int) {
+        logger.trace("withName: \(withName)")
+        
         inputQueue.async {
+            logger.trace("connect: getStreamsToHost")
+            
             Stream.getStreamsToHost(
                 withName: withName,
                 port: port,
@@ -111,10 +115,12 @@ open class NetSocket: NSObject {
         guard let runloop: RunLoop = self.runloop else {
             return
         }
-        deinitConnection(isDisconnected: isDisconnected)
-        self.runloop = nil
-        CFRunLoopStop(runloop.getCFRunLoop())
-        logger.trace("isDisconnected: \(isDisconnected)")
+        
+        deinitConnection(isDisconnected: isDisconnected) { [weak self] in
+            self?.runloop = nil
+            CFRunLoopStop(runloop.getCFRunLoop())
+            logger.trace("stop run loop; isDisconnected: \(isDisconnected)")
+        }
     }
 
     func initConnection() {
@@ -151,16 +157,27 @@ open class NetSocket: NSObject {
         connected = false
     }
 
-    func deinitConnection(isDisconnected: Bool) {
+    func deinitConnection(isDisconnected: Bool, completion: @escaping (() -> Void) = {}) {
         timeoutHandler?.cancel()
         inputStream?.close()
         inputStream?.remove(from: runloop!, forMode: .default)
         inputStream?.delegate = nil
         inputStream = nil
-        outputStream?.close()
-        outputStream?.remove(from: runloop!, forMode: .default)
-        outputStream?.delegate = nil
-        outputStream = nil
+       
+        outputQueue.async { [weak runloop, weak outputStream] in
+            outputStream?.close()
+            
+            if let runloop = runloop {
+                outputStream?.remove(from: runloop, forMode: .default)
+            }
+            
+            outputStream?.delegate = nil
+            outputStream = nil
+    
+            logger.trace("outputStream released")
+    
+            completion()
+        }
     }
 
     func didTimeout() {

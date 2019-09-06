@@ -106,19 +106,21 @@ final class RTMPTSocket: NSObject, RTMPSocketCompatible {
     }
 
     func close(isDisconnected: Bool) {
-        deinitConnection(isDisconnected: isDisconnected)
+        deinitConnection(isDisconnected: isDisconnected, completion: {})
     }
-
-    func deinitConnection(isDisconnected: Bool) {
-        if isDisconnected {
+	
+	func deinitConnection(isDisconnected: Bool, completion: @escaping (() -> Void)) {
+	    if isDisconnected {
             let data: ASObject = (readyState == .handshakeDone) ?
                 RTMPConnection.Code.connectClosed.data("") : RTMPConnection.Code.connectFailed.data("")
             events.append(Event(type: Event.RTMP_STATUS, bubbles: false, data: data))
         }
         guard let connectionID: String = connectionID else {
+			completion()
             return
         }
         doRequest("/close/\(connectionID)", Data(), didClose)
+		completion()
     }
 
     private func listen(data: Data?, response: URLResponse?, error: Error?) {
