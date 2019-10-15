@@ -26,6 +26,16 @@ open class NetStream: NSObject {
         NotificationCenter.default.removeObserver(self)
     }
 
+	public weak var videoIODelegate: VideoIODelegate? {
+		get { return self.mixer.videoIO.videoIODelegate }
+		set { self.mixer.videoIO.videoIODelegate = newValue }
+	}
+
+	public weak var audioIODelegate: AudioIODelegate? {
+		get { return self.mixer.audioIO.audioIODelegate }
+		set { self.mixer.audioIO.audioIODelegate = newValue }
+	}
+
     open var metadata: [String: Any?] = [:]
 
     open var context: CIContext? {

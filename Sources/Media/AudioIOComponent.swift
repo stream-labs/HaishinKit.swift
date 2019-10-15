@@ -1,5 +1,9 @@
 import AVFoundation
 
+public protocol AudioIODelegate: class {
+	func audioIOWillEncode(sampleBuffer: CMSampleBuffer)
+}
+
 final class AudioIOComponent: IOComponent {
     lazy var encoder = AudioConverter()
     let lockQueue = DispatchQueue(label: "com.haishinkit.HaishinKit.AudioIOComponent.lock")
@@ -84,6 +88,8 @@ final class AudioIOComponent: IOComponent {
     }
 #endif
 
+	public weak var audioIODelegate: AudioIODelegate?
+
     override init(mixer: AVMixer) {
         super.init(mixer: mixer)
         encoder.lockQueue = lockQueue
@@ -146,6 +152,8 @@ final class AudioIOComponent: IOComponent {
 extension AudioIOComponent: AVCaptureAudioDataOutputSampleBufferDelegate {
     // MARK: AVCaptureAudioDataOutputSampleBufferDelegate
     func captureOutput(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
+		self.audioIODelegate?.audioIOWillEncode(sampleBuffer: sampleBuffer)
+
         appendSampleBuffer(sampleBuffer)
     }
 }
