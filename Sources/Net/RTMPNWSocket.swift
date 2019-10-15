@@ -72,9 +72,9 @@ class RTMPNWSocket: RTMPSocketCompatible {
         conn = nil
         connected = false
     }
-
-    func deinitConnection(isDisconnected: Bool) {
-    }
+	
+	func deinitConnection(isDisconnected: Bool, completion: @escaping (() -> Void)) {
+	}
 
     @discardableResult
     func doOutput(chunk: RTMPChunk, locked: UnsafeMutablePointer<UInt32>? = nil) -> Int {

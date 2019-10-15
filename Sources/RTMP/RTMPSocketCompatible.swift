@@ -28,7 +28,7 @@ protocol RTMPSocketCompatible: class {
     func doOutput(chunk: RTMPChunk, locked: UnsafeMutablePointer<UInt32>?) -> Int
     func close(isDisconnected: Bool)
     func connect(withName: String, port: Int)
-    func deinitConnection(isDisconnected: Bool)
+    func deinitConnection(isDisconnected: Bool, completion: @escaping (() -> Void))
     func setProperty(_ value: Any?, forKey: String)
     func didTimeout()
 }
