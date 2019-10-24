@@ -2,9 +2,7 @@
 *.xcworkspace/xcuserdata/*
 build
 .build
-*.xccheckout
 *.moved-aside
-*.xcscmblueprint
 .DS_Store
 Pods
 
@@ -14,12 +12,12 @@ Pods
 *.mode2v3
 *.perspectivev3
 *.xcuserstate
+*.xcsettings
+*.xccheckout
+*.xcscmblueprint
 *.xcworkspace/
 project.xcworkspace/
 xcuserdata/
-
-# AppCode
-.idea/
 
 soe/bat/*
 soe/obj/*
@@ -34,7 +32,6 @@ Carthage/*
 
 Package.resolved
 HaishinKit.xcodeproj/project.xcworkspace/xcuserdata/shogo.xcuserdatad/WorkspaceSettings.xcsettings
-*.xcsettings
 docs/undocumented.json
 fastlane/report.xml
 docs/docsets/HaishinKit.docset/Contents/Resources/Documents/undocumented.json
