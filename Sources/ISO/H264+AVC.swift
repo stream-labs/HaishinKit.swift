@@ -40,7 +40,6 @@ struct AVCFormatStream {
  - seealso: ISO/IEC 14496-15 2010
  */
 struct AVCConfigurationRecord {
-
     static func getData(_ formatDescription: CMFormatDescription?) -> Data? {
         guard let formatDescription = formatDescription else {
             return nil
@@ -152,9 +151,9 @@ extension AVCConfigurationRecord: DataConvertible {
     }
 }
 
-extension AVCConfigurationRecord: CustomStringConvertible {
-    // MARK: CustomStringConvertible
-    var description: String {
-        return Mirror(reflecting: self).description
+extension AVCConfigurationRecord: CustomDebugStringConvertible {
+    // MARK: CustomDebugStringConvertible
+    var debugDescription: String {
+        return Mirror(reflecting: self).debugDescription
     }
 }

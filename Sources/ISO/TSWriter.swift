@@ -14,7 +14,7 @@ public class TSWriter: Running {
     public static let defaultVideoPID: UInt16 = 256
     public static let defaultAudioPID: UInt16 = 257
 
-    static let defaultSegmentDuration: Double = 2
+    public static let defaultSegmentDuration: Double = 2
 
     /// The delegate instance.
     public weak var delegate: TSWriterDelegate?
@@ -63,7 +63,8 @@ public class TSWriter: Running {
         return false
     }
 
-    public init() {
+    public init(segmentDuration: Double = TSWriter.defaultSegmentDuration) {
+        self.segmentDuration = segmentDuration
     }
 
     public func startRunning() {
@@ -130,7 +131,7 @@ public class TSWriter: Running {
         PES.streamID = streamID
 
         let timestamp = decodeTimeStamp == .invalid ? presentationTimeStamp : decodeTimeStamp
-        var packets: [TSPacket] = split(PID, PES: PES, timestamp: timestamp)
+        let packets: [TSPacket] = split(PID, PES: PES, timestamp: timestamp)
         rotateFileHandle(timestamp)
 
         packets[0].adaptationField?.randomAccessIndicator = randomAccessIndicator

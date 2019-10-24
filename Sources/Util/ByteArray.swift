@@ -1,7 +1,6 @@
 import Foundation
 
 protocol ByteArrayConvertible {
-
     var data: Data { get }
     var length: Int { get set }
     var position: Int { get set }
@@ -319,9 +318,9 @@ open class ByteArray: ByteArrayConvertible {
     }
 }
 
-extension ByteArray: CustomStringConvertible {
-    // MARK: CustomStringConvertible
-    public var description: String {
-        return Mirror(reflecting: self).description
+extension ByteArray: CustomDebugStringConvertible {
+    // MARK: CustomDebugStringConvertible
+    public var debugDescription: String {
+        return Mirror(reflecting: self).debugDescription
     }
 }

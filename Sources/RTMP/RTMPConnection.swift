@@ -4,8 +4,7 @@ import Foundation
 /**
  flash.net.Responder for Swift
  */
-open class Responder: NSObject {
-
+open class Responder {
     public typealias Handler = (_ data: [Any?]) -> Void
 
     private var result: Handler
@@ -37,7 +36,7 @@ open class RTMPConnection: EventDispatcher {
     public static let defaultFlashVer: String = "FMLE/3.0 (compatible; FMSc/1.0)"
     public static let defaultChunkSizeS: Int = 1024 * 8
     public static let defaultCapabilities: Int = 239
-    public static let defaultObjectEncoding: UInt8 = 0x00
+    public static let defaultObjectEncoding: RTMPObjectEncoding = .amf0
 
     /**
      NetStatusEvent#info.code for NetConnection
@@ -131,7 +130,7 @@ open class RTMPConnection: EventDispatcher {
         }
 
         let query = String(description[description.index(index, offsetBy: 1)...])
-        let challenge = String(format: "%08x", arc4random())
+        let challenge = String(format: "%08x", UInt32.random(in: 0...UInt32.max))
         let dictionary: [String: String] = URL(string: "http://localhost?" + query)!.dictionaryFromQuery()
 
         var response: String = MD5.base64("\(url.user!)\(dictionary["salt"]!)\(url.password!)")
@@ -174,7 +173,7 @@ open class RTMPConnection: EventDispatcher {
     /// The socket optional parameters.
     open var parameters: Any?
     /// The object encoding for this RTMPConnection instance.
-    open var objectEncoding: UInt8 = RTMPConnection.defaultObjectEncoding
+    open var objectEncoding: RTMPObjectEncoding = RTMPConnection.defaultObjectEncoding
     /// The statistics of total incoming bytes.
     open var totalBytesIn: Int64 {
         return socket.totalBytesIn
@@ -188,18 +187,18 @@ open class RTMPConnection: EventDispatcher {
         return streams.count
     }
     /// The statistics of outgoing queue bytes per second.
-    @objc open dynamic private(set) var previousQueueBytesOut: [Int64] = []
+    @objc open private(set) dynamic var previousQueueBytesOut: [Int64] = []
     /// The statistics of incoming bytes per second.
-    @objc open dynamic private(set) var currentBytesInPerSecond: Int32 = 0
+    @objc open private(set) dynamic var currentBytesInPerSecond: Int32 = 0
     /// The statistics of outgoing bytes per second.
-    @objc open dynamic private(set) var currentBytesOutPerSecond: Int32 = 0
+    @objc open private(set) dynamic var currentBytesOutPerSecond: Int32 = 0
 
     var socket: RTMPSocketCompatible!
-    var streams: [UInt32: RTMPStream] = [: ]
+    var streams: [UInt32: RTMPStream] = [:]
     var sequence: Int64 = 0
     var bandWidth: UInt32 = 0
-    var streamsmap: [UInt16: UInt32] = [: ]
-    var operations: [Int: Responder] = [: ]
+    var streamsmap: [UInt16: UInt32] = [:]
+    var operations: [Int: Responder] = [:]
     var windowSizeC: Int64 = RTMPConnection.defaultWindowSizeS {
         didSet {
             guard socket.connected else {
@@ -236,28 +235,23 @@ open class RTMPConnection: EventDispatcher {
             }
         }
     }
-    private var messages: [UInt16: RTMPMessage] = [: ]
+    private var messages: [UInt16: RTMPMessage] = [:]
     private var arguments: [Any?] = []
     private var currentChunk: RTMPChunk?
     private var measureInterval: Int = 3
-    private var fragmentedChunks: [UInt16: RTMPChunk] = [: ]
+    private var fragmentedChunks: [UInt16: RTMPChunk] = [:]
     private var previousTotalBytesIn: Int64 = 0
     private var previousTotalBytesOut: Int64 = 0
 
     override public init() {
         super.init()
-        addEventListener(Event.RTMP_STATUS, selector: #selector(on(status:)))
+        addEventListener(.rtmpStatus, selector: #selector(on(status:)))
     }
 
     deinit {
         timer = nil
         streams.removeAll()
-        removeEventListener(Event.RTMP_STATUS, selector: #selector(on(status:)))
-    }
-
-    @available(*, unavailable)
-    open func connect(_ command: String) {
-        connect(command, arguments: nil)
+        removeEventListener(.rtmpStatus, selector: #selector(on(status:)))
     }
 
     open func call(_ commandName: String, responder: Responder?, arguments: Any?...) {
@@ -409,7 +403,7 @@ open class RTMPConnection: EventDispatcher {
             streamId: 0,
             transactionId: currentTransactionId,
             // "connect" must be a objectEncoding = 0
-            objectEncoding: 0,
+            objectEncoding: .amf0,
             commandName: "connect",
             commandObject: [
                 "app": app,

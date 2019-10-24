@@ -49,24 +49,28 @@ final class LiveViewController: UIViewController {
         super.viewDidLoad()
 
         rtmpStream = RTMPStream(connection: rtmpConnection)
-        rtmpStream.syncOrientation = true
+        if let orientation = DeviceUtil.videoOrientation(by: UIApplication.shared.statusBarOrientation) {
+            rtmpStream.orientation = orientation
+        }
         rtmpStream.captureSettings = [
-            "sessionPreset": AVCaptureSession.Preset.hd1280x720.rawValue,
-            "continuousAutofocus": true,
-            "continuousExposure": true,
-            "preferredVideoStabilizationMode": AVCaptureVideoStabilizationMode.auto.rawValue
+            .sessionPreset: AVCaptureSession.Preset.hd1280x720,
+            .continuousAutofocus: true,
+            .continuousExposure: true
+            // .preferredVideoStabilizationMode: AVCaptureVideoStabilizationMode.auto
         ]
         rtmpStream.videoSettings = [
-            "width": 720,
-            "height": 1280
+            .width: 720,
+            .height: 1280
         ]
         rtmpStream.audioSettings = [
-            "sampleRate": sampleRate
+            .sampleRate: sampleRate
         ]
         rtmpStream.mixer.recorder.delegate = ExampleRecorderDelegate.shared
 
         videoBitrateSlider?.value = Float(RTMPStream.defaultVideoBitrate) / 1024
         audioBitrateSlider?.value = Float(RTMPStream.defaultAudioBitrate) / 1024
+
+        NotificationCenter.default.addObserver(self, selector: #selector(on(_:)), name: UIDevice.orientationDidChangeNotification, object: nil)
     }
 
     override func viewWillAppear(_ animated: Bool) {
@@ -100,17 +104,17 @@ final class LiveViewController: UIViewController {
     }
 
     @IBAction func toggleTorch(_ sender: UIButton) {
-        rtmpStream.torch = !rtmpStream.torch
+        rtmpStream.torch.toggle()
     }
 
     @IBAction func on(slider: UISlider) {
         if slider == audioBitrateSlider {
             audioBitrateLabel?.text = "audio \(Int(slider.value))/kbps"
-            rtmpStream.audioSettings["bitrate"] = slider.value * 1024
+            rtmpStream.audioSettings[.bitrate] = slider.value * 1024
         }
         if slider == videoBitrateSlider {
             videoBitrateLabel?.text = "video \(Int(slider.value))/kbps"
-            rtmpStream.videoSettings["bitrate"] = slider.value * 1024
+            rtmpStream.videoSettings[.bitrate] = slider.value * 1024
         }
         if slider == zoomSlider {
             rtmpStream.setZoomFactor(CGFloat(slider.value), ramping: true, withRate: 5.0)
@@ -118,7 +122,7 @@ final class LiveViewController: UIViewController {
     }
 
     @IBAction func on(pause: UIButton) {
-        rtmpStream.togglePause()
+        rtmpStream.paused.toggle()
     }
 
     @IBAction func on(close: UIButton) {
@@ -129,17 +133,17 @@ final class LiveViewController: UIViewController {
         if publish.isSelected {
             UIApplication.shared.isIdleTimerDisabled = false
             rtmpConnection.close()
-            rtmpConnection.removeEventListener(Event.RTMP_STATUS, selector: #selector(rtmpStatusHandler), observer: self)
-            rtmpConnection.removeEventListener(Event.IO_ERROR, selector: #selector(rtmpErrorHandler), observer: self)
+            rtmpConnection.removeEventListener(.rtmpStatus, selector: #selector(rtmpStatusHandler), observer: self)
+            rtmpConnection.removeEventListener(.ioError, selector: #selector(rtmpErrorHandler), observer: self)
             publish.setTitle("●", for: [])
         } else {
             UIApplication.shared.isIdleTimerDisabled = true
-            rtmpConnection.addEventListener(Event.RTMP_STATUS, selector: #selector(rtmpStatusHandler), observer: self)
-            rtmpConnection.addEventListener(Event.IO_ERROR, selector: #selector(rtmpErrorHandler), observer: self)
+            rtmpConnection.addEventListener(.rtmpStatus, selector: #selector(rtmpStatusHandler), observer: self)
+            rtmpConnection.addEventListener(.ioError, selector: #selector(rtmpErrorHandler), observer: self)
             rtmpConnection.connect(Preference.defaultInstance.uri!)
             publish.setTitle("■", for: [])
         }
-        publish.isSelected = !publish.isSelected
+        publish.isSelected.toggle()
     }
 
     @objc
@@ -168,7 +172,7 @@ final class LiveViewController: UIViewController {
     @objc
     private func rtmpErrorHandler(_ notification: Notification) {
         let e = Event.from(notification)
-        print("rtmpErrorHandler: \(e.description)")
+        print("rtmpErrorHandler: \(e)")
 
         DispatchQueue.main.async {
             self.rtmpConnection.connect(Preference.defaultInstance.uri!)
@@ -184,20 +188,20 @@ final class LiveViewController: UIViewController {
         }
     }
 
-    @IBAction func onFPSValueChanged(_ segment: UISegmentedControl) {
+    @IBAction private func onFPSValueChanged(_ segment: UISegmentedControl) {
         switch segment.selectedSegmentIndex {
         case 0:
-            rtmpStream.captureSettings["fps"] = 15.0
+            rtmpStream.captureSettings[.fps] = 15.0
         case 1:
-            rtmpStream.captureSettings["fps"] = 30.0
+            rtmpStream.captureSettings[.fps] = 30.0
         case 2:
-            rtmpStream.captureSettings["fps"] = 60.0
+            rtmpStream.captureSettings[.fps] = 60.0
         default:
             break
         }
     }
 
-    @IBAction func onEffectValueChanged(_ segment: UISegmentedControl) {
+    @IBAction private func onEffectValueChanged(_ segment: UISegmentedControl) {
         if let currentEffect: VideoEffect = currentEffect {
             _ = rtmpStream.unregisterVideoEffect(currentEffect)
         }
@@ -211,6 +215,14 @@ final class LiveViewController: UIViewController {
         default:
             break
         }
+    }
+
+    @objc
+    private func on(_ notification: Notification) {
+        guard let orientation = DeviceUtil.videoOrientation(by: UIApplication.shared.statusBarOrientation) else {
+            return
+        }
+        rtmpStream.orientation = orientation
     }
 
     override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey: Any]?, context: UnsafeMutableRawPointer?) {

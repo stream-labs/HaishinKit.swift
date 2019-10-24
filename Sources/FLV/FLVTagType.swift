@@ -25,7 +25,7 @@ public enum FLVTagType: UInt8 {
 }
 
 // MARK: -
-public protocol FLVTag: CustomStringConvertible {
+public protocol FLVTag: CustomDebugStringConvertible {
     var tagType: FLVTagType { get set }
     var dataSize: UInt32 { get set }
     var timestamp: UInt32 { get set }
@@ -57,9 +57,9 @@ extension FLVTag {
         }
     }
 
-    // MARK: CustomStringConvertible
-    public var description: String {
-        return Mirror(reflecting: self).description
+    // MARK: CustomDebugStringConvertible
+    public var debugDescription: String {
+        return Mirror(reflecting: self).debugDescription
     }
 }
 

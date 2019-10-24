@@ -1,6 +1,6 @@
 import Foundation
 
-protocol HTTPResponseCompatible: CustomStringConvertible {
+protocol HTTPResponseCompatible: CustomDebugStringConvertible {
     var version: String { get set }
     var statusCode: String { get set }
     var headerFields: [String: String] { get set }
@@ -8,9 +8,9 @@ protocol HTTPResponseCompatible: CustomStringConvertible {
 }
 
 extension HTTPResponseCompatible {
-    // MARK: CustomStringConvertible
-    public var description: String {
-        return Mirror(reflecting: self).description
+    // MARK: CustomDebugStringConvertible
+    public var debugDescription: String {
+        return Mirror(reflecting: self).debugDescription
     }
 }
 
@@ -68,7 +68,7 @@ public struct HTTPResponse: HTTPResponseCompatible, ExpressibleByDictionaryLiter
 
     public var version: String = HTTPVersion.version11.rawValue
     public var statusCode: String = ""
-    public var headerFields: [String: String] = [: ]
+    public var headerFields: [String: String] = [:]
     public var body: Data?
 
     public init(dictionaryLiteral elements: (Key, Value)...) {
