@@ -21,5 +21,17 @@ Carthage/*
 
 Package.resolved
 HaishinKit.xcodeproj/project.xcworkspace/xcuserdata/shogo.xcuserdatad/WorkspaceSettings.xcsettings
-*.xcsettings
 docs/undocumented.json
+
+# Xcode
+*.pbxuser
+*.mode1v3
+*.mode2v3
+*.perspectivev3
+*.xcuserstate
+*.xcworkspace/
+project.xcworkspace/
+xcuserdata/
+
+# AppCode
+.idea/
