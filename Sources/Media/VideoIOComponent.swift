@@ -1,5 +1,9 @@
 import AVFoundation
 
+public protocol VideoIODelegate: class {
+	func videoIOWillEncode(sampleBuffer: CMSampleBuffer)
+}
+
 final class VideoIOComponent: IOComponent {
     #if os(macOS)
     static let defaultAttributes: [NSString: NSObject] = [
@@ -16,6 +20,8 @@ final class VideoIOComponent: IOComponent {
     #endif
 
     let lockQueue = DispatchQueue(label: "com.haishinkit.HaishinKit.VideoIOComponent.lock")
+
+	public weak var videoIODelegate: VideoIODelegate?
 
     var context: CIContext? {
         didSet {
@@ -439,6 +445,8 @@ extension VideoIOComponent: AVCaptureVideoDataOutputSampleBufferDelegate {
     // MARK: AVCaptureVideoDataOutputSampleBufferDelegate
     func captureOutput(_ captureOutput: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
         appendSampleBuffer(sampleBuffer)
+
+		self.videoIODelegate?.videoIOWillEncode(sampleBuffer: sampleBuffer)
     }
 }
 

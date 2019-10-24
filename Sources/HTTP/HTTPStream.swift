@@ -25,6 +25,18 @@ open class HTTPStream: NetStream {
         }
     }
 
+	open func expectedMedias(medias: [AVMediaType]?) {
+		self.tsWriter.expectedMedias.removeAll()
+
+		guard let medias = medias else { return }
+
+		for media in medias {
+			if media == .audio || media == .video {
+				self.tsWriter.expectedMedias.insert(media)
+			}
+		}
+	}
+
     #if os(iOS) || os(macOS)
     override open func attachCamera(_ camera: AVCaptureDevice?, onError: ((NSError) -> Void)? = nil) {
         if camera == nil {
