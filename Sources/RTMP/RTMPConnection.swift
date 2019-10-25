@@ -497,7 +497,7 @@ extension RTMPConnection: RTMPSocketDelegate {
         self.close(isDisconnected: true)
 
 		let data: ASObject = RTMPConnection.Code.connectFailed.data("Connection Timeout")
-		self.dispatch(event: Event(type: Event.RTMP_STATUS, bubbles: false, data: data))
+		self.dispatch(event: Event(type: .rtmpStatus, bubbles: false, data: data))
     }
 
     func listen(_ data: Data) {
