@@ -4,7 +4,7 @@ import AVFoundation
  */
 public struct RTMPStreamInfo {
     public internal(set) var byteCount: Int64 = 0
-    public internal(set) var resourceName: String?
+    public var resourceName: String?
     public internal(set) var currentBytesPerSecond: Int32 = 0
 
     private var previousByteCount: Int64 = 0
@@ -220,7 +220,7 @@ open class RTMPStream: NetStream {
     public static let defaultVideoBitrate: UInt32 = H264Encoder.defaultBitrate
 
     open weak var delegate: RTMPStreamDelegate?
-    open internal(set) var info = RTMPStreamInfo()
+    open var info = RTMPStreamInfo()
     open private(set) var objectEncoding: RTMPObjectEncoding = RTMPConnection.defaultObjectEncoding
     /// The number of frames per second being displayed.
     @objc open private(set) dynamic var currentFPS: UInt16 = 0
