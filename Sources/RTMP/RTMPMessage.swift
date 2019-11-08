@@ -332,12 +332,24 @@ final class RTMPCommandMessage: RTMPMessage {
     }
 
     override func execute(_ connection: RTMPConnection, type: RTMPChunkType) {
-        guard let responder: Responder = connection.operations.removeValue(forKey: transactionId) else {
+		
+		let id: Int
+		let isNamedResult: Bool
+		
+		if let namedId = connection.namedOperation.removeValue(forKey: commandName) {
+			id = namedId
+			isNamedResult = true
+		} else {
+			id = transactionId
+			isNamedResult = false
+		}
+
+        guard let responder: Responder = connection.operations.removeValue(forKey: id) else {
             switch commandName {
             case "close":
                 connection.close(isDisconnected: true)
             default:
-                connection.dispatch(Event.RTMP_STATUS, bubbles: false, data: arguments.first)
+                connection.dispatch(Event.RTMP_STATUS, bubbles: false, data: arguments.first ?? nil)
             }
             return
         }
@@ -348,7 +360,9 @@ final class RTMPCommandMessage: RTMPMessage {
         case "_error":
             responder.on(status: arguments)
         default:
-            break
+			if isNamedResult {
+				responder.on(result: arguments)
+			}
         }
     }
 }
