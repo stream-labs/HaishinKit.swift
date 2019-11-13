@@ -20,7 +20,6 @@ Cartfile.resolved
 Carthage/*
 
 Package.resolved
-HaishinKit.xcodeproj/project.xcworkspace/xcuserdata/shogo.xcuserdatad/WorkspaceSettings.xcsettings
 docs/undocumented.json
 
 # Xcode
@@ -28,10 +27,13 @@ docs/undocumented.json
 *.mode1v3
 *.mode2v3
 *.perspectivev3
-*.xcuserstate
+*.xcsettings
 *.xcworkspace/
 project.xcworkspace/
 xcuserdata/
 
 # AppCode
 .idea/
+
+# Podfiles
+Pods/

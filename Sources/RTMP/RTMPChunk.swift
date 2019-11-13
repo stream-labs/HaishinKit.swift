@@ -189,7 +189,8 @@ final class RTMPChunk {
         self.message = message
     }
 
-    init(message: RTMPMessage) {
+    init(type: RTMPChunkType = .zero, message: RTMPMessage) {
+		self.type = type
         self.message = message
     }
 

@@ -9,6 +9,7 @@ open class Responder {
 
     private var result: Handler
     private var status: Handler?
+    var triggerName: String?
 
     public init(result: @escaping Handler, status: Handler? = nil) {
         self.result = result
@@ -199,6 +200,7 @@ open class RTMPConnection: EventDispatcher {
     var bandWidth: UInt32 = 0
     var streamsmap: [UInt16: UInt32] = [:]
     var operations: [Int: Responder] = [:]
+    var namedOperation: [String: Int] = [: ]
     var windowSizeC: Int64 = RTMPConnection.defaultWindowSizeS {
         didSet {
             guard socket.connected else {
@@ -269,8 +271,12 @@ open class RTMPConnection: EventDispatcher {
         )
         if responder != nil {
             operations[message.transactionId] = responder
+            
+            if let triggerName = responder?.triggerName {
+                namedOperation[triggerName] = message.transactionId
+            }
         }
-        socket.doOutput(chunk: RTMPChunk(message: message), locked: nil)
+        socket.doOutput(chunk: RTMPChunk(type: .zero, message: message), locked: nil)
     }
 
     open func connect(_ command: String, arguments: Any?...) {
@@ -318,8 +324,10 @@ open class RTMPConnection: EventDispatcher {
         timer = nil
     }
 
-    func createStream(_ stream: RTMPStream) {
-        let responder = Responder(result: { data -> Void in
+    func createStream(_ stream: RTMPStream, name: String? = nil) {
+        let responder = Responder(result: { [weak self] data -> Void in
+            guard let `self` = self else { return }
+            
             guard let id: Double = data[0] as? Double else {
                 return
             }
@@ -327,7 +335,25 @@ open class RTMPConnection: EventDispatcher {
             self.streams[stream.id] = stream
             stream.readyState = .open
         })
-        call("createStream", responder: responder)
+        
+        if let name = name {
+            call("releaseStream", responder: nil, arguments: name)
+            
+            if flashVer.contains("FMLE/") {
+                let fcResponder = Responder(result: { data -> Void in
+                    self.call("createStream", responder: responder)
+                })
+    
+                fcResponder.triggerName = "onFCPublish"
+                
+                call("FCPublish", responder: fcResponder, arguments: name)
+            } else {
+                call("createStream", responder: responder)
+            }
+        }
+        else {
+            call("createStream", responder: responder)
+        }
     }
 
     @objc
@@ -475,6 +501,7 @@ extension RTMPConnection: RTMPSocketDelegate {
             previousTotalBytesOut = 0
             messages.removeAll()
             operations.removeAll()
+            namedOperation.removeAll()
             fragmentedChunks.removeAll()
         default:
             break
