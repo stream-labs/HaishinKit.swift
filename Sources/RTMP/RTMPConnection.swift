@@ -171,6 +171,8 @@ open class RTMPConnection: EventDispatcher {
     open private(set) var connected = false
     /// This instance requires Network.framework if possible.
     open var requireNetworkFramework = false
+    /// This instance sends FCPublish before stream creation.
+    open var requireFCPublishPosted = false
     /// The socket optional parameters.
     open var parameters: Any?
     /// The object encoding for this RTMPConnection instance.
@@ -335,21 +337,19 @@ open class RTMPConnection: EventDispatcher {
             self.streams[stream.id] = stream
             stream.readyState = .open
         })
-        
+    
         if let name = name {
             call("releaseStream", responder: nil, arguments: name)
-            
-            if flashVer.contains("FMLE/") {
-                let fcResponder = Responder(result: { data -> Void in
-                    self.call("createStream", responder: responder)
-                })
+        }
+        
+        if requireFCPublishPosted {
+            let fcResponder = Responder(result: { data -> Void in
+                self.call("createStream", responder: responder)
+            })
     
-                fcResponder.triggerName = "onFCPublish"
-                
-                call("FCPublish", responder: fcResponder, arguments: name)
-            } else {
-                call("createStream", responder: responder)
-            }
+            fcResponder.triggerName = "onFCPublish"
+    
+            call("FCPublish", responder: fcResponder, arguments: name)
         }
         else {
             call("createStream", responder: responder)
