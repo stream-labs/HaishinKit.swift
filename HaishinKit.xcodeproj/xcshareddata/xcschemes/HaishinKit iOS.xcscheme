@@ -40,6 +40,15 @@
       debugDocumentVersioning = "YES"
       debugServiceExtension = "internal"
       allowLocationSimulation = "YES">
+      <BuildableProductRunnable>
+         <BuildableReference
+            BuildableIdentifier = "primary"
+            BlueprintIdentifier = "29C9327D1CD76FB800283FC5"
+            BuildableName = "Example iOS.app"
+            BlueprintName = "Example iOS"
+            ReferencedContainer = "container:HaishinKit.xcodeproj">
+         </BuildableReference>
+      </BuildableProductRunnable>
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
@@ -49,6 +58,10 @@
             ReferencedContainer = "container:HaishinKit.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
+      <LocationScenarioReference
+         identifier = "com.apple.dt.IDEFoundation.CurrentLocationScenarioIdentifier"
+         referenceType = "1">
+      </LocationScenarioReference>
    </LaunchAction>
    <ProfileAction
       buildConfiguration = "Release"
