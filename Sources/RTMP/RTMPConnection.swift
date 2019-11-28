@@ -442,7 +442,7 @@ open class RTMPConnection: EventDispatcher {
                 "videoCodecs": SupportVideo.h264.rawValue,
                 "videoFunction": VideoFunction.clientSeek.rawValue,
                 "pageUrl": pageUrl,
-                "objectEncoding": objectEncoding
+                /*"objectEncoding": objectEncoding*/
             ],
             arguments: arguments
         )
