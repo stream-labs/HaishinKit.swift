@@ -32,13 +32,15 @@ open class HTTPStream: NetStream {
     }
 
     #if os(iOS) || os(macOS)
-    override open func attachCamera(_ device: AVCaptureDevice?, onError: ((Error) -> Void)? = nil) {
+    override open func attachCamera(_ device: AVCaptureDevice?,
+                                    onSuccess: (() -> Void)? = nil,
+                                    onError: ((Error) -> Void)? = nil) {
         if device == nil {
             tsWriter.expectedMedias.remove(.video)
         } else {
             tsWriter.expectedMedias.insert(.video)
         }
-        super.attachCamera(device, onError: onError)
+        super.attachCamera(device, onSuccess: onSuccess, onError: onError)
     }
 
     override open func attachAudio(_ device: AVCaptureDevice?, automaticallyConfiguresApplicationAudioSession: Bool = true, onError: ((Error) -> Void)? = nil) {

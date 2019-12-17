@@ -167,10 +167,11 @@ open class NetStream: NSObject {
     #if os(iOS) || os(macOS)
     /// Attaches the primary camera object.
     /// - Warning: This method can't use appendSampleBuffer at the same time.
-    open func attachCamera(_ device: AVCaptureDevice?, onError: ((_ error: Error) -> Void)? = nil) {
+    open func attachCamera(_ device: AVCaptureDevice?, onSuccess: (() -> Void)? = nil, onError: ((_ error: Error) -> Void)? = nil) {
         lockQueue.async {
             do {
                 try self.mixer.videoIO.attachCamera(device)
+                onSuccess?()
             } catch {
                 onError?(error)
             }
@@ -180,10 +181,11 @@ open class NetStream: NSObject {
     /// Attaches the 2ndary camera  object for picture in picture.
     /// - Warning: This method can't use appendSampleBuffer at the same time.
     @available(iOS 13.0, *)
-    open func attachMultiCamera(_ device: AVCaptureDevice?, onError: ((_ error: Error) -> Void)? = nil) {
+    open func attachMultiCamera(_ device: AVCaptureDevice?, onSuccess: (() -> Void)? = nil, onError: ((_ error: Error) -> Void)? = nil) {
         lockQueue.async {
             do {
                 try self.mixer.videoIO.attachMultiCamera(device)
+                onSuccess?()
             } catch {
                 onError?(error)
             }
