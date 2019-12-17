@@ -335,7 +335,7 @@ final class VideoIOComponent: IOComponent {
 
         output.setSampleBufferDelegate(self, queue: lockQueue)
 
-        fps *= 1
+        /*fps *= 1*/
         position = camera.position
         drawable?.position = camera.position
     }
