@@ -86,7 +86,9 @@ open class NetStream: NSObject {
             return mixer.settings
         }
         set {
-            mixer.settings = newValue
+            ensureLockQueue {
+                mixer.settings = newValue
+            }
         }
     }
 
