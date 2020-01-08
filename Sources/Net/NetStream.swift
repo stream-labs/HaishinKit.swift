@@ -83,11 +83,15 @@ open class NetStream: NSObject {
 
     open var captureSettings: Setting<AVMixer, AVMixer.Option> {
         get {
-            return mixer.settings
+            var settings: Setting<AVMixer, AVMixer.Option> = [:]
+            ensureLockQueue {
+                settings = mixer.settings
+            }
+            return settings
         }
         set {
-            ensureLockQueue {
-                mixer.settings = newValue
+            lockQueue.async {
+                self.mixer.settings = newValue
             }
         }
     }
