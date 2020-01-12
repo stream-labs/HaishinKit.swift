@@ -259,7 +259,7 @@ public final class H264Encoder {
             sourceFrameRefcon: nil,
             infoFlagsOut: &flags
         )
-        if !muted {
+        if !muted || lastImageBuffer == nil {
             lastImageBuffer = imageBuffer
         }
     }
