@@ -123,7 +123,20 @@ final class AudioIOComponent: IOComponent {
         #if os(iOS)
         mixer.session.automaticallyConfiguresApplicationAudioSession = automaticallyConfiguresApplicationAudioSession
         #endif
-        mixer.session.addOutput(output)
+        
+        if mixer.session.canAddOutput(output) {
+            mixer.session.addOutput(output)
+        }
+        else {
+            for output in mixer.session.outputs {
+                mixer.session.removeOutput(output)
+            }
+    
+            if mixer.session.canAddOutput(output) {
+                mixer.session.addOutput(output)
+            }
+        }
+        
         output.setSampleBufferDelegate(self, queue: lockQueue)
     }
 

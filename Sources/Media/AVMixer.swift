@@ -85,7 +85,13 @@ public class AVMixer {
                 return
             }
             session.beginConfiguration()
-            session.sessionPreset = sessionPreset
+            
+            if session.canSetSessionPreset(sessionPreset) {
+                session.sessionPreset = sessionPreset
+            } else {
+                session.sessionPreset = .default
+            }
+            
             session.commitConfiguration()
         }
     }
