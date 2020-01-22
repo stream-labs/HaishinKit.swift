@@ -394,7 +394,7 @@ final class VideoIOComponent: IOComponent {
         }
 
         if drawable != nil || !effects.isEmpty {
-            autoreleasepool {
+//            autoreleasepool {
                 let image: CIImage = effect(buffer, info: sampleBuffer)
                 extent = image.extent
                 if !effects.isEmpty {
@@ -411,7 +411,7 @@ final class VideoIOComponent: IOComponent {
                     context?.render(image, to: imageBuffer ?? buffer)
                 }
             drawable?.draw(image: image)
-            }
+//            }
         }
 
         encoder.encodeImageBuffer(
