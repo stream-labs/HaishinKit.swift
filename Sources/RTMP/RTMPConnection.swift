@@ -418,7 +418,12 @@ open class RTMPConnection: EventDispatcher {
             return nil
         }
 
-        var app = String(uri.path[uri.path.index(uri.path.startIndex, offsetBy: 1)...])
+        var app: String = ""
+        
+        if uri.path.count > 0 {
+            app = String(uri.path[uri.path.index(uri.path.startIndex, offsetBy: 1)...])
+        }
+  
         if let query: String = uri.query {
             app += "?" + query
         }
