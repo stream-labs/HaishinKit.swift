@@ -173,8 +173,9 @@ open class RTMPStream: NetStream {
         case live
         case localRecord
     }
-
-    enum ReadyState: UInt8 {
+    
+    @objc
+    public enum ReadyState: UInt8 {
         case initialized = 0
         case open = 1
         case play = 2
@@ -189,7 +190,7 @@ open class RTMPStream: NetStream {
     public static let defaultVideoBitrate: UInt32 = H264Encoder.defaultBitrate
 
     open weak var delegate: RTMPStreamDelegate?
-    open internal(set) var info = RTMPStreamInfo()
+    open var info = RTMPStreamInfo()
     open private(set) var objectEncoding: RTMPObjectEncoding = RTMPConnection.defaultObjectEncoding
     /// The number of frames per second being displayed.
     @objc open private(set) dynamic var currentFPS: UInt16 = 0
@@ -305,6 +306,8 @@ open class RTMPStream: NetStream {
             default:
                 break
             }
+	
+			delegate?.didChangeReadyState(self.readyState)
         }
     }
     var audioTimestamp: Double = 0.0
@@ -420,7 +423,7 @@ open class RTMPStream: NetStream {
             while self.readyState == .initialized && !self.isBeingClosed {
                 usleep(100)
             }
-
+            var fileNameValid: String = name ?? "videoName"
             if self.info.resourceName == name && self.readyState == .publishing {
                 switch type {
                 case .localRecord:
@@ -433,10 +436,10 @@ open class RTMPStream: NetStream {
                 return
             }
 
-            self.info.resourceName = name
+            self.info.resourceName = fileNameValid
             self.howToPublish = type
             self.readyState = .publish
-            self.FCPublish()
+            self.FCPublish() // FIXME: Remove?
             self.rtmpConnection.socket.doOutput(chunk: RTMPChunk(
                 type: .zero,
                 streamId: RTMPChunk.StreamID.audio.rawValue,
@@ -506,19 +509,50 @@ open class RTMPStream: NetStream {
         }
     }
 
-    func createMetaData() -> ASObject {
+    open func createMetaData() -> ASObject {
         metadata.removeAll()
 #if os(iOS) || os(macOS)
         if let _: AVCaptureInput = mixer.videoIO.input {
             metadata["width"] = mixer.videoIO.encoder.width
             metadata["height"] = mixer.videoIO.encoder.height
             metadata["framerate"] = mixer.videoIO.fps
+//            metadata["videocodecid"] = "avc1"
             metadata["videocodecid"] = FLVVideoCodec.avc.rawValue
             metadata["videodatarate"] = mixer.videoIO.encoder.bitrate / 1000
+            
+            metadata["avcprofile"] = 66
+            metadata["avclevel"] = 31
+            
+            metadata["presetname"] = "Custom"
+//            metadata["fmleversion"] = "3.2.0.9932"
+            metadata["encoder"] = "Streamlabs 2.1.8/iOS 13.0.1"
+            metadata["videodevice"] = "iOS"
+            metadata["videokeyframe_frequency"] = 2
+            
+            metadata["author"] = ""
+            metadata["copyright"] = ""
+            metadata["description"] = ""
+            metadata["keywords"] = ""
+            metadata["rating"] = ""
+            metadata["title"] = ""
+    
+            let df = DateFormatter()
+            df.dateFormat = "E MMM d HH:mm:ss yyyy"
+            df.locale = Locale(identifier: "en_US_POSIX")
+            metadata["creationdate"] = df.string(from: Date())
         }
         if let _: AVCaptureInput = mixer.audioIO.input {
+//            metadata["audiocodecid"] = "mp4a"
             metadata["audiocodecid"] = FLVAudioCodec.aac.rawValue
             metadata["audiodatarate"] = mixer.audioIO.encoder.bitrate / 1000
+            
+            metadata["audiosamplerate"] = mixer.audioIO.encoder.sampleRate
+           
+            metadata["audiodevice"] = "iOS"
+            metadata["audiochannels"] = 2
+//            metadata["audioinputvolume"] = 75
+            metadata["audiosamplesize"] = 16
+//            metadata["aacaot"] = 2
         }
 #endif
         return metadata
@@ -528,6 +562,8 @@ open class RTMPStream: NetStream {
         currentFPS = frameCount
         frameCount = 0
         info.on(timer: timer)
+
+		self.delegate?.didChangeStreamInfo(self)
     }
 
     @objc
@@ -539,7 +575,7 @@ open class RTMPStream: NetStream {
         switch code {
         case RTMPConnection.Code.connectSuccess.rawValue:
             readyState = .initialized
-            rtmpConnection.createStream(self)
+            rtmpConnection.createStream(self, name: info.resourceName)
         case RTMPStream.Code.playStart.rawValue:
             readyState = .playing
         case RTMPStream.Code.publishStart.rawValue:

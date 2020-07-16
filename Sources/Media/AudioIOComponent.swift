@@ -4,6 +4,10 @@ import AVFoundation
 import SwiftPMSupport
 #endif
 
+public protocol AudioIODelegate: class {
+    func audioIOWillEncode(sampleBuffer: CMSampleBuffer)
+}
+
 final class AudioIOComponent: IOComponent, DisplayLinkedQueueClockReference {
     lazy var encoder = AudioConverter()
     let lockQueue = DispatchQueue(label: "com.haishinkit.HaishinKit.AudioIOComponent.lock")
@@ -96,6 +100,8 @@ final class AudioIOComponent: IOComponent, DisplayLinkedQueueClockReference {
     }
 #endif
 
+	public weak var audioIODelegate: AudioIODelegate?
+
     override init(mixer: AVMixer) {
         super.init(mixer: mixer)
         encoder.lockQueue = lockQueue
@@ -129,7 +135,20 @@ final class AudioIOComponent: IOComponent, DisplayLinkedQueueClockReference {
         #if os(iOS)
         mixer.session.automaticallyConfiguresApplicationAudioSession = automaticallyConfiguresApplicationAudioSession
         #endif
-        mixer.session.addOutput(output)
+        
+        if mixer.session.canAddOutput(output) {
+            mixer.session.addOutput(output)
+        }
+        else {
+            for output in mixer.session.outputs {
+                mixer.session.removeOutput(output)
+            }
+    
+            if mixer.session.canAddOutput(output) {
+                mixer.session.addOutput(output)
+            }
+        }
+        
         output.setSampleBufferDelegate(self, queue: lockQueue)
     }
 
@@ -172,6 +191,8 @@ final class AudioIOComponent: IOComponent, DisplayLinkedQueueClockReference {
 extension AudioIOComponent: AVCaptureAudioDataOutputSampleBufferDelegate {
     // MARK: AVCaptureAudioDataOutputSampleBufferDelegate
     func captureOutput(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
+		self.audioIODelegate?.audioIOWillEncode(sampleBuffer: sampleBuffer)
+
         appendSampleBuffer(sampleBuffer)
     }
 }

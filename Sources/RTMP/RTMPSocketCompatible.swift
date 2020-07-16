@@ -37,6 +37,7 @@ extension RTMPSocketCompatible {
     }
 
     func didTimeout() {
+        self.delegate?.didReceiveTimeout()
         close(isDisconnected: false)
         delegate?.dispatch(.ioError, bubbles: false, data: nil)
         logger.warn("connection timedout")
@@ -48,4 +49,5 @@ protocol RTMPSocketDelegate: IEventDispatcher {
     func listen(_ data: Data)
     func didSetReadyState(_ readyState: RTMPSocketReadyState)
     func didSetTotalBytesIn(_ totalBytesIn: Int64)
+	func didReceiveTimeout()
 }

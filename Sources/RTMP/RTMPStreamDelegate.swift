@@ -8,6 +8,10 @@ public protocol RTMPStreamDelegate: class {
     func didOutputVideo(_ buffer: CMSampleBuffer)
     func didStatics(_ stream: RTMPStream, withConneciton: RTMPConnection)
     func clear()
+    
+    func didChangeReadyState(_ state: RTMPStream.ReadyState)
+
+	func didChangeStreamInfo(_ stream: RTMPStream)
 }
 
 public extension RTMPStreamDelegate {

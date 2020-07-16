@@ -1,6 +1,10 @@
 import AVFoundation
 import CoreImage
 
+public protocol VideoIODelegate: class {
+	func videoIOWillEncode(sampleBuffer: CMSampleBuffer)
+}
+
 final class VideoIOComponent: IOComponent {
     #if os(macOS)
     static let defaultAttributes: [NSString: NSObject] = [
@@ -17,6 +21,8 @@ final class VideoIOComponent: IOComponent {
     #endif
 
     let lockQueue = DispatchQueue(label: "com.haishinkit.HaishinKit.VideoIOComponent.lock")
+
+	public weak var videoIODelegate: VideoIODelegate?
 
     var context: CIContext? {
         didSet {
@@ -341,7 +347,7 @@ final class VideoIOComponent: IOComponent {
 
         output.setSampleBufferDelegate(self, queue: lockQueue)
 
-        fps *= 1
+        /*fps *= 1*/
         position = camera.position
         renderer?.position = camera.position
     }
@@ -470,6 +476,8 @@ extension VideoIOComponent: AVCaptureVideoDataOutputSampleBufferDelegate {
     // MARK: AVCaptureVideoDataOutputSampleBufferDelegate
     func captureOutput(_ captureOutput: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
         encodeSampleBuffer(sampleBuffer)
+    
+        self.videoIODelegate?.videoIOWillEncode(sampleBuffer: sampleBuffer)
     }
 }
 

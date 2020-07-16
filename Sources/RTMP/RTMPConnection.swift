@@ -9,6 +9,7 @@ open class Responder {
 
     private var result: Handler
     private var status: Handler?
+    var triggerName: String?
 
     public init(result: @escaping Handler, status: Handler? = nil) {
         self.result = result
@@ -170,6 +171,8 @@ open class RTMPConnection: EventDispatcher {
     open private(set) var connected = false
     /// This instance requires Network.framework if possible.
     open var requireNetworkFramework = false
+    /// This instance sends FCPublish before stream creation.
+    open var requireFCPublishPosted = false
     /// The socket optional parameters.
     open var parameters: Any?
     /// The object encoding for this RTMPConnection instance.
@@ -199,6 +202,7 @@ open class RTMPConnection: EventDispatcher {
     var bandWidth: UInt32 = 0
     var streamsmap: [UInt16: UInt32] = [:]
     var operations: [Int: Responder] = [:]
+    var namedOperation: [String: Int] = [: ]
     var windowSizeC: Int64 = RTMPConnection.defaultWindowSizeS {
         didSet {
             guard socket.connected else {
@@ -269,14 +273,20 @@ open class RTMPConnection: EventDispatcher {
         )
         if responder != nil {
             operations[message.transactionId] = responder
+            
+            if let triggerName = responder?.triggerName {
+                namedOperation[triggerName] = message.transactionId
+            }
         }
-        socket.doOutput(chunk: RTMPChunk(message: message), locked: nil)
+        socket.doOutput(chunk: RTMPChunk(type: .zero, message: message), locked: nil)
     }
 
     open func connect(_ command: String, arguments: Any?...) {
-        guard let uri = URL(string: command), let scheme: String = uri.scheme, !connected && RTMPConnection.supportedProtocols.contains(scheme) else {
-            return
-        }
+        guard let uri = URL(string: command),
+			let scheme: String = uri.scheme?.lowercased(),
+			!connected && RTMPConnection.supportedProtocols.contains(scheme),
+			let host = uri.host else { return }
+		
         self.uri = uri
         self.arguments = arguments
         timer = Timer(timeInterval: 1.0, target: self, selector: #selector(on(timer:)), userInfo: nil, repeats: true)
@@ -292,8 +302,8 @@ open class RTMPConnection: EventDispatcher {
         }
         socket.delegate = self
         socket.setProperty(parameters, forKey: "parameters")
-        socket.securityLevel = uri.scheme == "rtmps" || uri.scheme == "rtmpts"  ? .negotiatedSSL : .none
-        socket.connect(withName: uri.host!, port: uri.port ?? RTMPConnection.defaultPort)
+        socket.securityLevel = scheme == "rtmps" || scheme == "rtmpts"  ? .negotiatedSSL : .none
+        socket.connect(withName: host, port: uri.port ?? RTMPConnection.defaultPort)
     }
 
     open func close() {
@@ -316,8 +326,10 @@ open class RTMPConnection: EventDispatcher {
         timer = nil
     }
 
-    func createStream(_ stream: RTMPStream) {
-        let responder = Responder(result: { data -> Void in
+    func createStream(_ stream: RTMPStream, name: String? = nil) {
+        let responder = Responder(result: { [weak self] data -> Void in
+            guard let `self` = self else { return }
+            
             guard let id: Double = data[0] as? Double else {
                 return
             }
@@ -325,7 +337,23 @@ open class RTMPConnection: EventDispatcher {
             self.streams[stream.id] = stream
             stream.readyState = .open
         })
-        call("createStream", responder: responder)
+    
+        if let name = name {
+            call("releaseStream", responder: nil, arguments: name)
+        }
+        
+        if requireFCPublishPosted {
+            let fcResponder = Responder(result: { data -> Void in
+                self.call("createStream", responder: responder)
+            })
+    
+            fcResponder.triggerName = "onFCPublish"
+    
+            call("FCPublish", responder: fcResponder, arguments: name)
+        }
+        else {
+            call("createStream", responder: responder)
+        }
     }
 
     @objc
@@ -390,7 +418,12 @@ open class RTMPConnection: EventDispatcher {
             return nil
         }
 
-        var app = String(uri.path[uri.path.index(uri.path.startIndex, offsetBy: 1)...])
+        var app: String = ""
+        
+        if uri.path.count > 0 {
+            app = String(uri.path[uri.path.index(uri.path.startIndex, offsetBy: 1)...])
+        }
+  
         if let query: String = uri.query {
             app += "?" + query
         }
@@ -476,6 +509,7 @@ extension RTMPConnection: RTMPSocketDelegate {
             previousTotalBytesOut = 0
             messages.removeAll()
             operations.removeAll()
+            namedOperation.removeAll()
             fragmentedChunks.removeAll()
         default:
             break
@@ -492,6 +526,12 @@ extension RTMPConnection: RTMPSocketDelegate {
             message: RTMPAcknowledgementMessage(UInt32(totalBytesIn))
         ), locked: nil)
         sequence += 1
+    }
+
+    func didReceiveTimeout() {
+        // FIXME: Check if called
+		let data: ASObject = RTMPConnection.Code.connectFailed.data("Connection Timeout")
+		self.dispatch(event: Event(type: .rtmpStatus, bubbles: false, data: data))
     }
 
     func listen(_ data: Data) {

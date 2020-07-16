@@ -161,6 +161,10 @@ public class AudioConverter {
                 &_converter
             )
             setBitrateUntilNoErr(bitrate * inDestinationFormat.mChannelsPerFrame)
+			
+			print("Updating _converter")
+			print("inSourceFormat: \(inSourceFormat!)")
+			print("inDestinationFormat: \(inDestinationFormat)")
         }
         if status != noErr {
             logger.warn("\(status)")

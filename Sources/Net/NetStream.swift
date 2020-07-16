@@ -11,6 +11,16 @@ open class NetStream: NSObject {
         queue.setSpecific(key: queueKey, value: queueValue)
         return queue
     }()
+    
+	public weak var videoIODelegate: VideoIODelegate? {
+		get { return self.mixer.videoIO.videoIODelegate }
+		set { self.mixer.videoIO.videoIODelegate = newValue }
+	}
+
+	public weak var audioIODelegate: AudioIODelegate? {
+		get { return self.mixer.audioIO.audioIODelegate }
+		set { self.mixer.audioIO.audioIODelegate = newValue }
+	}
 
     open private(set) var mixer = AVMixer()
     open var metadata: [String: Any?] = [:]
@@ -64,10 +74,13 @@ open class NetStream: NSObject {
     }
 
 #if os(iOS) || os(macOS)
-    open func attachCamera(_ camera: AVCaptureDevice?, onError: ((_ error: NSError) -> Void)? = nil) {
+    open func attachCamera(_ camera: AVCaptureDevice?,
+                           onSuccess: (() -> Void)? = nil,
+                           onError: ((_ error: NSError) -> Void)? = nil) {
         lockQueue.async {
             do {
                 try self.mixer.videoIO.attachCamera(camera)
+                onSuccess?()
             } catch let error as NSError {
                 onError?(error)
             }

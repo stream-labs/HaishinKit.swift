@@ -76,6 +76,8 @@ public class Setting<T: AnyObject, Key: KeyPathRepresentable>: ExpressibleByDict
         switch value {
         case let value as Float:
             return Double(value)
+        case let value as Int:
+            return Double(value)
         case let value as Double:
             return value
         case let value as Int:

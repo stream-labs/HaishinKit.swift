@@ -20,6 +20,12 @@ xcuserdata/
 # AppCode
 .idea/
 
+# Podfiles
+Pods/
+
+# Fastlane
+fastlane/report.xml
+
 soe/bat/*
 soe/obj/*
 soe/bin/*
@@ -32,7 +38,4 @@ Cartfile.resolved
 Carthage/*
 
 Package.resolved
-HaishinKit.xcodeproj/project.xcworkspace/xcuserdata/shogo.xcuserdatad/WorkspaceSettings.xcsettings
-*.xcsettings
 docs/undocumented.json
-fastlane/report.xml
