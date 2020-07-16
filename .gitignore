@@ -4,10 +4,22 @@ build
 .build
 *.xccheckout
 *.moved-aside
-*.xcuserstate
 *.xcscmblueprint
 .DS_Store
 Pods
+
+# Xcode
+*.pbxuser
+*.mode1v3
+*.mode2v3
+*.perspectivev3
+*.xcuserstate
+*.xcworkspace/
+project.xcworkspace/
+xcuserdata/
+
+# AppCode
+.idea/
 
 soe/bat/*
 soe/obj/*
