@@ -439,7 +439,7 @@ open class RTMPStream: NetStream {
             self.info.resourceName = fileNameValid
             self.howToPublish = type
             self.readyState = .publish
-            self.FCPublish() // FIXME: Remove?
+            
             self.rtmpConnection.socket.doOutput(chunk: RTMPChunk(
                 type: .zero,
                 streamId: RTMPChunk.StreamID.audio.rawValue,

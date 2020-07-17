@@ -278,6 +278,8 @@ open class RTMPConnection: EventDispatcher {
                 namedOperation[triggerName] = message.transactionId
             }
         }
+        logger.debug("call command: \(commandName)")
+    
         socket.doOutput(chunk: RTMPChunk(type: .zero, message: message), locked: nil)
     }
 
