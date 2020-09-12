@@ -55,7 +55,7 @@ final class VideoIOComponent: IOComponent {
         return queue
     }()
 
-    private(set) var effects: Set<VideoEffect> = []
+    private(set) var effects: OrderedSet<VideoEffect> = []
 
     private var extent = CGRect.zero {
         didSet {
@@ -401,7 +401,7 @@ final class VideoIOComponent: IOComponent {
 
     func registerEffect(_ effect: VideoEffect) -> Bool {
         effect.ciContext = context
-        return effects.insert(effect).inserted
+        return effects.append(effect)
     }
 
     func unregisterEffect(_ effect: VideoEffect) -> Bool {
