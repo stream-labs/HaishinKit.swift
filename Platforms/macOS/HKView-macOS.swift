@@ -1,5 +1,6 @@
 #if os(macOS)
 
+import AppKit
 import AVFoundation
 
 open class HKView: NSView {

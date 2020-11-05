@@ -6,7 +6,7 @@ import VideoToolbox
 import UIKit
 #endif
 
-protocol VideoEncoderDelegate: class {
+public protocol VideoEncoderDelegate: class {
     func didSetFormatDescription(video formatDescription: CMFormatDescription?)
     func sampleOutput(video sampleBuffer: CMSampleBuffer)
 }
@@ -190,12 +190,7 @@ public final class H264Encoder {
         return properties
     }
 
-    private var callback: VTCompressionOutputCallback = {(
-        outputCallbackRefCon: UnsafeMutableRawPointer?,
-        sourceFrameRefCon: UnsafeMutableRawPointer?,
-        status: OSStatus,
-        infoFlags: VTEncodeInfoFlags,
-        sampleBuffer: CMSampleBuffer?) in
+    private var callback: VTCompressionOutputCallback = {(outputCallbackRefCon: UnsafeMutableRawPointer?, sourceFrameRefCon: UnsafeMutableRawPointer?, status: OSStatus, infoFlags: VTEncodeInfoFlags, sampleBuffer: CMSampleBuffer?) in
         guard
             let refcon: UnsafeMutableRawPointer = outputCallbackRefCon,
             let sampleBuffer: CMSampleBuffer = sampleBuffer, status == noErr else {

@@ -54,7 +54,9 @@ public class TSWriter: Running {
     private var audioTimestamp: CMTime = .invalid
     private var PCRTimestamp = CMTime.zero
     private var canWriteFor: Bool {
-        guard expectedMedias.isEmpty else { return true }
+        guard expectedMedias.isEmpty else {
+            return true
+        }
         if expectedMedias.contains(.audio) && expectedMedias.contains(.video) {
             return audioConfig != nil && videoConfig != nil
         }
@@ -98,7 +100,9 @@ public class TSWriter: Running {
 
     // swiftlint:disable function_parameter_count
     final func writeSampleBuffer(_ PID: UInt16, streamID: UInt8, bytes: UnsafePointer<UInt8>?, count: UInt32, presentationTimeStamp: CMTime, decodeTimeStamp: CMTime, randomAccessIndicator: Bool) {
-        guard canWriteFor else { return }
+        guard canWriteFor else {
+            return
+        }
 
         switch PID {
         case TSWriter.defaultAudioPID:
@@ -180,8 +184,12 @@ public class TSWriter: Running {
     }
 
     final func writeProgramIfNeeded() {
-        guard !expectedMedias.isEmpty else { return }
-        guard canWriteFor else { return }
+        guard !expectedMedias.isEmpty else {
+            return
+        }
+        guard canWriteFor else {
+            return
+        }
         writeProgram()
     }
 
@@ -215,7 +223,9 @@ extension TSWriter: AudioConverterDelegate {
     }
 
     public func sampleOutput(audio data: UnsafeMutableAudioBufferListPointer, presentationTimeStamp: CMTime) {
-        guard !data.isEmpty && 0 < data[0].mDataByteSize else { return }
+        guard !data.isEmpty && 0 < data[0].mDataByteSize else {
+            return
+        }
         writeSampleBuffer(
             TSWriter.defaultAudioPID,
             streamID: 192,
@@ -230,7 +240,7 @@ extension TSWriter: AudioConverterDelegate {
 
 extension TSWriter: VideoEncoderDelegate {
     // MARK: VideoEncoderDelegate
-    func didSetFormatDescription(video formatDescription: CMFormatDescription?) {
+    public func didSetFormatDescription(video formatDescription: CMFormatDescription?) {
         guard
             let formatDescription: CMFormatDescription = formatDescription,
             let avcC: Data = AVCConfigurationRecord.getData(formatDescription) else {
@@ -244,7 +254,7 @@ extension TSWriter: VideoEncoderDelegate {
         videoConfig = AVCConfigurationRecord(data: avcC)
     }
 
-    func sampleOutput(video sampleBuffer: CMSampleBuffer) {
+    public func sampleOutput(video sampleBuffer: CMSampleBuffer) {
         guard let dataBuffer = sampleBuffer.dataBuffer else {
             return
         }

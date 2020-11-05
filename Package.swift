@@ -4,11 +4,16 @@ import PackageDescription
 
 let package = Package(
     name: "HaishinKit",
+    platforms: [
+        .iOS(.v9),
+        .tvOS(.v10),
+        .macOS(.v10_11)
+    ],
     products: [
         .library(name: "HaishinKit", targets: ["HaishinKit"])
     ],
     dependencies: [
-        .package(url: "https://github.com/shogo4405/Logboard.git", from: "2.1.3")
+        .package(url: "https://github.com/shogo4405/Logboard.git", from: "2.2.0")
     ],
     targets: [
         .target(name: "SwiftPMSupport"),
@@ -18,12 +23,13 @@ let package = Package(
                     "Codec",
                     "Extension",
                     "FLV",
+                    "HTTP",
                     "ISO",
                     "Media",
                     "Net",
-                    "Util",
+                    "PiP",
                     "RTMP",
-                    "HTTP",
+                    "Util",
                     "Platforms"
                 ])
     ]
