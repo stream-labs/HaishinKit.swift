@@ -43,13 +43,17 @@ open class HTTPStream: NetStream {
         super.attachCamera(device, onSuccess: onSuccess, onError: onError)
     }
 
-    override open func attachAudio(_ device: AVCaptureDevice?, automaticallyConfiguresApplicationAudioSession: Bool = true, onError: ((Error) -> Void)? = nil) {
+    override open func attachAudio(_ device: AVCaptureDevice?,
+                                   automaticallyConfiguresApplicationAudioSession: Bool = true,
+                                   onSuccess: (() -> Void)? = nil,
+                                   onError: ((Error) -> Void)? = nil) {
         if device == nil {
             tsWriter.expectedMedias.remove(.audio)
         } else {
             tsWriter.expectedMedias.insert(.audio)
         }
-        super.attachAudio(device, automaticallyConfiguresApplicationAudioSession: automaticallyConfiguresApplicationAudioSession, onError: onError)
+        super.attachAudio(device, automaticallyConfiguresApplicationAudioSession: automaticallyConfiguresApplicationAudioSession,
+                onSuccess: onSuccess, onError: onError)
     }
     #endif
 
