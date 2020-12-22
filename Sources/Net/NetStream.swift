@@ -87,10 +87,14 @@ open class NetStream: NSObject {
         }
     }
 
-    open func attachAudio(_ audio: AVCaptureDevice?, automaticallyConfiguresApplicationAudioSession: Bool = false, onError: ((_ error: NSError) -> Void)? = nil) {
+    open func attachAudio(_ audio: AVCaptureDevice?,
+                          automaticallyConfiguresApplicationAudioSession: Bool = false,
+                          onSuccess: (() -> Void)? = nil,
+                          onError: ((_ error: NSError) -> Void)? = nil) {
         lockQueue.async {
             do {
                 try self.mixer.audioIO.attachAudio(audio, automaticallyConfiguresApplicationAudioSession: automaticallyConfiguresApplicationAudioSession)
+                onSuccess?()
             } catch let error as NSError {
                 onError?(error)
             }
