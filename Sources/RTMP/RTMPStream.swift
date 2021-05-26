@@ -458,8 +458,6 @@ open class RTMPStream: NetStream {
     }
 
     private func didChangeReadyState(_ readyState: ReadyState, oldValue: ReadyState) {
-        delegate?.streamDidChangeReadyState(self, readyState)
-        
         guard let rtmpConnection else {
             return
         }
@@ -515,6 +513,8 @@ open class RTMPStream: NetStream {
         default:
             break
         }
+    
+        delegate?.streamDidChangeReadyState(self, readyState)
     }
 
     @objc
