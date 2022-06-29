@@ -73,7 +73,10 @@ public typealias Indices = CountableRange<Int>
 	/// Removes the specified element from the set.
 	@discardableResult
 	public mutating func remove(_ element: Element) -> Element? {
-		set.remove(element)
+		if let index = array.firstIndex(of: element) {
+			array.remove(at: index)
+		}
+		return set.remove(element)
 	}
 	
 	/// Remove and return the element at the beginning of the ordered set.
