@@ -6,7 +6,7 @@ import UIKit
 /**
  * A view that displays a video content of a NetStream object which uses AVCaptureVideoPreviewLayer.
  */
-public class HKView: UIView {
+open class HKView: UIView {
     /// The view’s background color.
     public static var defaultBackgroundColor: UIColor = .black
 
