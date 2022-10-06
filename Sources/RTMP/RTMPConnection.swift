@@ -450,7 +450,7 @@ open class RTMPConnection: EventDispatcher {
 
         var app: String = ""
         
-        if uri.path.count > 0 {
+        if !uri.path.isEmpty {
             app = String(uri.path[uri.path.index(uri.path.startIndex, offsetBy: 1)...])
         }
   
