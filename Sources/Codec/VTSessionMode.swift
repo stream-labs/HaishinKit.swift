@@ -21,7 +21,7 @@ enum VTSessionMode {
                 refcon: nil,
                 compressionSessionOut: &session
             )
-            guard status == noErr, let session else {
+            guard status == noErr, let session = session else {
                 videoCodec.delegate?.videoCodec(videoCodec, errorOccurred: .failedToCreate(status: status))
                 return nil
             }

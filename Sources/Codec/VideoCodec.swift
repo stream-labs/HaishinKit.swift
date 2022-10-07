@@ -140,7 +140,7 @@ public class VideoCodec {
             presentationTimeStamp: presentationTimeStamp,
             duration: duration
         ) { [unowned self] status, _, sampleBuffer in
-            guard let sampleBuffer, status == noErr else {
+            guard let sampleBuffer = sampleBuffer, status == noErr else {
                 delegate?.videoCodec(self, errorOccurred: .failedToFlame(status: status))
                 return
             }
