@@ -424,6 +424,10 @@ open class RTMPStream: NetStream {
         #endif
         return metadata
     }
+    
+    open func sendMetadata() {
+        send(handlerName: "@setDataFrame", arguments: "onMetaData", createMetaData())
+    }
 
     func close(withLockQueue: Bool) {
         if withLockQueue {
@@ -508,7 +512,7 @@ open class RTMPStream: NetStream {
             audioWasSent = false
             FCPublish()
         case .publishing:
-            send(handlerName: "@setDataFrame", arguments: "onMetaData", createMetaData())
+            sendMetadata()
             mixer.startEncoding(muxer)
         default:
             break
