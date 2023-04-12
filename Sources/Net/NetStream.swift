@@ -23,6 +23,7 @@ public protocol NetStreamDelegate: AnyObject {
     func stream(_ stream: NetStream, audioCodecErrorOccurred error: AudioCodec.Error)
     /// Tells the receiver to the stream opened.
     func streamDidOpen(_ stream: NetStream)
+    func streamDidChangeReadyState(_ stream: NetStream, _ state: RTMPStream.ReadyState)
 }
 
 /// The `NetStream` class is the foundation of a RTMPStream, HTTPStream.

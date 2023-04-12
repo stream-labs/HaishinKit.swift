@@ -148,8 +148,9 @@ open class RTMPStream: NetStream {
         /// Publish.
         case live
     }
-
-    enum ReadyState: UInt8 {
+    
+    @objc
+    public enum ReadyState: UInt8 {
         case initialized
         case open
         case play
@@ -432,6 +433,8 @@ open class RTMPStream: NetStream {
     }
 
     private func didChangeReadyState(_ readyState: ReadyState, oldValue: ReadyState) {
+        delegate?.streamDidChangeReadyState(self, readyState)
+        
         guard let rtmpConnection else {
             return
         }
