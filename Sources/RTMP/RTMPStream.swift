@@ -430,6 +430,8 @@ open class RTMPStream: NetStream {
         currentFPS = frameCount
         frameCount = 0
         info.on(timer: timer)
+
+		delegate?.streamDidChangeStreamInfo(self)
     }
 
     private func didChangeReadyState(_ readyState: ReadyState, oldValue: ReadyState) {

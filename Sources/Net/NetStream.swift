@@ -24,6 +24,7 @@ public protocol NetStreamDelegate: AnyObject {
     /// Tells the receiver to the stream opened.
     func streamDidOpen(_ stream: NetStream)
     func streamDidChangeReadyState(_ stream: NetStream, _ state: RTMPStream.ReadyState)
+    func streamDidChangeStreamInfo(_ stream: RTMPStream)
 }
 
 /// The `NetStream` class is the foundation of a RTMPStream, HTTPStream.
