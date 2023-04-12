@@ -102,6 +102,7 @@ final class RTMPSocket: NetSocket, RTMPSocketCompatible {
         deinitConnection(isDisconnected: true)
         close(isDisconnected: true)
         delegate?.dispatch(.ioError, bubbles: false, data: nil)
+        delegate?.socketDidReceiveTimeout(self)
         logger.warn("connection timedout")
     }
 }

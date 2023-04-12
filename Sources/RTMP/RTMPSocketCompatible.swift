@@ -50,4 +50,5 @@ protocol RTMPSocketDelegate: EventDispatcherConvertible {
     func socket(_ socket: RTMPSocketCompatible, data: Data)
     func socket(_ socket: RTMPSocketCompatible, readyState: RTMPSocketReadyState)
     func socket(_ socket: RTMPSocketCompatible, totalBytesIn: Int64)
+    func socketDidReceiveTimeout(_ socket: RTMPSocketCompatible)
 }

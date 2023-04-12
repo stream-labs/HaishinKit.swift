@@ -580,4 +580,11 @@ extension RTMPConnection: RTMPSocketDelegate {
             self.socket(socket, data: data.advanced(by: position))
         }
     }
+    
+    func socketDidReceiveTimeout(_ socket: RTMPSocketCompatible) {
+        self.close(isDisconnected: true)
+        
+        let data: ASObject = RTMPConnection.Code.connectFailed.data("Connection Timeout")
+        self.dispatch(event: Event(type: Event.RTMP_STATUS, bubbles: false, data: data))
+    }
 }
