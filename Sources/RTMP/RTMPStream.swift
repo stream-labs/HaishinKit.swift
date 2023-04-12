@@ -390,10 +390,33 @@ open class RTMPStream: NetStream {
             metadata["framerate"] = mixer.videoIO.frameRate
             metadata["videocodecid"] = FLVVideoCodec.avc.rawValue
             metadata["videodatarate"] = mixer.videoIO.codec.settings.bitRate / 1000
+            
+//            metadata["avcprofile"] = 66
+//            metadata["avclevel"] = 31
+            
+//            metadata["presetname"] = "Custom"
+            metadata["encoder"] = "Streamlabs/iOS"
+            metadata["videodevice"] = "iOS"
+//            metadata["videokeyframe_frequency"] = 2
+            
+//            metadata["author"] = ""
+//            metadata["copyright"] = ""
+//            metadata["description"] = ""
+//            metadata["keywords"] = ""
+//            metadata["rating"] = ""
+//            metadata["title"] = ""
+    
+//            let df = DateFormatter()
+//            df.dateFormat = "E MMM d HH:mm:ss yyyy"
+//            df.locale = Locale(identifier: "en_US_POSIX")
+//            metadata["creationdate"] = df.string(from: Date())
         }
         if mixer.audioIO.capture.device != nil {
             metadata["audiocodecid"] = FLVAudioCodec.aac.rawValue
             metadata["audiodatarate"] = mixer.audioIO.codec.settings.bitRate / 1000
+//            metadata["audiodevice"] = "iOS"
+//            metadata["audiochannels"] = 2
+//            metadata["audiosamplesize"] = 16
             if let sampleRate = mixer.audioIO.codec.inSourceFormat?.mSampleRate {
                 metadata["audiosamplerate"] = sampleRate
             }
@@ -506,7 +529,7 @@ open class RTMPStream: NetStream {
         switch code {
         case RTMPConnection.Code.connectSuccess.rawValue:
             readyState = .initialized
-            rtmpConnection.createStream(self)
+            rtmpConnection.createStream(self, name: info.resourceName)
         case RTMPStream.Code.playReset.rawValue:
             readyState = .play
         case RTMPStream.Code.playStart.rawValue:
