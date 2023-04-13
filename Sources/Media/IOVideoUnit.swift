@@ -44,9 +44,9 @@ final class IOVideoUnit: NSObject, IOUnit {
     weak var mixer: IOMixer?
 
     var muted = false
-
-    private(set) var effects: Set<VideoEffect> = []
-
+    
+    private(set) var effects: OrderedSet<VideoEffect> = []
+    
     private var extent = CGRect.zero {
         didSet {
             guard extent != oldValue else {
@@ -215,7 +215,7 @@ final class IOVideoUnit: NSObject, IOUnit {
 
     func registerEffect(_ effect: VideoEffect) -> Bool {
         effect.ciContext = context
-        return effects.insert(effect).inserted
+        return effects.append(effect)
     }
 
     func unregisterEffect(_ effect: VideoEffect) -> Bool {
