@@ -93,7 +93,7 @@ public enum AudioCodecFormat {
                 mBytesPerPacket: bytesPerPacket,
                 mFramesPerPacket: framesPerPacket,
                 mBytesPerFrame: bytesPerFrame,
-                mChannelsPerFrame: inSourceFormat.mChannelsPerFrame,
+                mChannelsPerFrame: min(inSourceFormat.mChannelsPerFrame, 2),
                 mBitsPerChannel: bitsPerChannel,
                 mReserved: 0
             )
