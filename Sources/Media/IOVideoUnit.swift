@@ -282,7 +282,7 @@ final class IOVideoUnit: NSObject, IOUnit {
             imageBuffer ?? buffer,
             withPresentationTime: sampleBuffer.presentationTimeStamp
         )
-        if !muted {
+        if !muted || pixelBuffer == nil {
             pixelBuffer = buffer
         }
     }
