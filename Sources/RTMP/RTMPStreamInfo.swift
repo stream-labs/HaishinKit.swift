@@ -21,6 +21,10 @@ public struct RTMPStreamInfo {
         currentBytesPerSecond = 0
         previousByteCount = 0
     }
+        
+    public mutating func updateResourceName(_ newName: String?) {
+        resourceName = newName
+    }
 }
 
 extension RTMPStreamInfo: CustomDebugStringConvertible {
