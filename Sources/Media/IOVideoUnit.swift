@@ -256,13 +256,7 @@ final class IOVideoUnit: NSObject, IOUnit {
             let image = effect(buffer, info: sampleBuffer)
             extent = image.extent
             if !effects.isEmpty {
-                #if os(macOS)
                 pixelBufferPool?.createPixelBuffer(&imageBuffer)
-                #else
-                if buffer.width != Int(extent.width) || buffer.height != Int(extent.height) {
-                    pixelBufferPool?.createPixelBuffer(&imageBuffer)
-                }
-                #endif
                 imageBuffer?.lockBaseAddress()
                 context.render(image, to: imageBuffer ?? buffer)
             }
