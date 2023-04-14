@@ -225,6 +225,10 @@ open class RTMPStream: NetStream {
             }
         }
     }
+    open var resourceName: String? {
+        get { info.resourceName }
+        set { info.resourceName = newValue }
+    }
     var id: UInt32 = RTMPStream.defaultID
     var readyState: ReadyState = .initialized {
         didSet {
