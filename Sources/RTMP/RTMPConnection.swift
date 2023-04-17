@@ -197,7 +197,7 @@ open class RTMPConnection: EventDispatcher {
     /// Specifies the instance connected to server(true) or not(false).
     public private(set) var connected = false
     /// Specifies the instance requires Network.framework if possible.
-    public var requireNetworkFramework = false
+    public var requireNetworkFramework = true
     /// This instance sends FCPublish before stream creation.
     public var requireFCPublishPosted = false
     /// Specifies the socket optional parameters.
@@ -444,7 +444,7 @@ open class RTMPConnection: EventDispatcher {
     }
 
     private func makeConnectionChunk() -> RTMPChunk? {
-        guard let uri: URL = uri else {
+        guard let uri else {
             return nil
         }
 
@@ -457,7 +457,6 @@ open class RTMPConnection: EventDispatcher {
         if let query: String = uri.query {
             app += "?" + query
         }
-
         currentTransactionId += 1
 
         let message = RTMPCommandMessage(
