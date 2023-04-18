@@ -103,7 +103,10 @@ final class RTMPNWSocket: RTMPSocketCompatible {
         }
         readyState = .closing
         timeoutHandler?.cancel()
-        connection = nil
+        
+        outputQueue.asyncAfter(deadline: .now() + 3) {
+            self.connection = nil
+        }
     }
 
     @discardableResult
