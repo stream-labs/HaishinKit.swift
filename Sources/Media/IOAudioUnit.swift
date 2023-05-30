@@ -112,7 +112,11 @@ final class IOAudioUnit: NSObject, IOUnit {
             let formatDescription = sampleBuffer.formatDescription, status == noErr else {
             return nil
         }
-        guard let buffer = AVAudioPCMBuffer(pcmFormat: AVAudioFormat(cmAudioFormatDescription: formatDescription), frameCapacity: AVAudioFrameCount(numSamples)) else {
+        var pcmFormat: AVAudioFormat?
+        if #available(iOS 13.0, *), Int(buffer.formatDescription?.audioStreamBasicDescription?.mSampleRate ?? 0) == numSamples {
+            pcmFormat = AVAudioFormat(cmAudioFormatDescription: formatDescription)
+        }
+        guard let pcmFormat, let buffer = AVAudioPCMBuffer(pcmFormat: pcmFormat, frameCapacity: AVAudioFrameCount(numSamples)) else {
             return nil
         }
         buffer.frameLength = buffer.frameCapacity
