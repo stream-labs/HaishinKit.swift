@@ -162,6 +162,10 @@ public class VideoCodec {
         }
     }
 
+    func invalidateCompressionSession() {
+        invalidateSession = true
+    }
+
     #if os(iOS)
     @objc
     private func applicationWillEnterForeground(_ notification: Notification) {

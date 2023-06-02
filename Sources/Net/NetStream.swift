@@ -288,6 +288,10 @@ open class NetStream: NSObject {
     public func stopRecording() {
         mixer.recorder.stopRunning()
     }
+    
+    public func invalidateCompressionSession() {
+        mixer.videoIO.codec.invalidateCompressionSession()
+    }
 }
 
 extension NetStream: IOMixerDelegate {
