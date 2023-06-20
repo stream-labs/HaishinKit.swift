@@ -6,12 +6,12 @@ import Foundation
 import SwiftPMSupport
 #endif
 
-/// MPEG-2 TS (Transport Stream) Writer delegate
+/// The interface an MPEG-2 TS (Transport Stream) writer uses to inform its delegates.
 public protocol TSWriterDelegate: AnyObject {
     func writer(_ writer: TSWriter, didOutput data: Data)
 }
 
-/// MPEG-2 TS (Transport Stream) Writer Foundation class
+/// The TSWriter class represents writs  MPEG-2 transport stream data.
 public class TSWriter: Running {
     public static let defaultPATPID: UInt16 = 0
     public static let defaultPMTPID: UInt16 = 4095
@@ -21,7 +21,7 @@ public class TSWriter: Running {
     public static let defaultSegmentDuration: Double = 2
 
     /// The delegate instance.
-    public weak var delegate: TSWriterDelegate?
+    public weak var delegate: (any TSWriterDelegate)?
     /// This instance is running to process(true) or not(false).
     public internal(set) var isRunning: Atomic<Bool> = .init(false)
     /// The exptected medias = [.video, .audio].
@@ -45,7 +45,7 @@ public class TSWriter: Running {
             writeProgramIfNeeded()
         }
     }
-    private var videoConfig: AVCConfigurationRecord? {
+    private var videoConfig: AVCDecoderConfigurationRecord? {
         didSet {
             writeProgramIfNeeded()
         }
@@ -244,7 +244,7 @@ extension TSWriter: VideoCodecDelegate {
     public func videoCodec(_ codec: VideoCodec, didOutput formatDescription: CMFormatDescription?) {
         guard
             let formatDescription,
-            let avcC = AVCConfigurationRecord.getData(formatDescription) else {
+            let avcC = AVCDecoderConfigurationRecord.getData(formatDescription) else {
             return
         }
         var data = ESSpecificData()
@@ -252,7 +252,7 @@ extension TSWriter: VideoCodecDelegate {
         data.elementaryPID = TSWriter.defaultVideoPID
         PMT.elementaryStreamSpecificData.append(data)
         videoContinuityCounter = 0
-        videoConfig = AVCConfigurationRecord(data: avcC)
+        videoConfig = AVCDecoderConfigurationRecord(data: avcC)
     }
 
     public func videoCodec(_ codec: VideoCodec, didOutput sampleBuffer: CMSampleBuffer) {
@@ -279,6 +279,10 @@ extension TSWriter: VideoCodecDelegate {
     }
 
     public func videoCodec(_ codec: VideoCodec, errorOccurred error: VideoCodec.Error) {
+    }
+
+    public func videoCodecWillDropFame(_ codec: VideoCodec) -> Bool {
+        return false
     }
 }
 

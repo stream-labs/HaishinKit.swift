@@ -19,6 +19,7 @@ protocol IOMixerDelegate: AnyObject {
     func mixer(_ mixer: IOMixer, sessionWasInterrupted session: AVCaptureSession, reason: AVCaptureSession.InterruptionReason)
     func mixer(_ mixer: IOMixer, sessionInterruptionEnded session: AVCaptureSession, reason: AVCaptureSession.InterruptionReason)
     #endif
+    func mixerSessionWillResume(_ mixer: IOMixer)
 }
 
 /// An object that mixies audio and video for streaming.
@@ -128,7 +129,7 @@ public class IOMixer {
     public lazy var recorder = IORecorder()
 
     /// Specifies the drawable object.
-    public weak var drawable: NetStreamDrawable? {
+    public weak var drawable: (any NetStreamDrawable)? {
         get {
             videoIO.drawable
         }
@@ -139,7 +140,7 @@ public class IOMixer {
 
     var mediaSync = MediaSync.passthrough
 
-    weak var delegate: IOMixerDelegate?
+    weak var delegate: (any IOMixerDelegate)?
 
     lazy var audioIO: IOAudioUnit = {
         var audioIO = IOAudioUnit()
@@ -177,7 +178,7 @@ public class IOMixer {
         case .encoding:
             break
         case .decoding:
-            switch sampleBuffer.formatDescription?.legacyMediaType {
+            switch sampleBuffer.formatDescription?._mediaType {
             case kCMMediaType_Audio:
                 audioIO.codec.appendSampleBuffer(sampleBuffer)
             case kCMMediaType_Video:
@@ -237,7 +238,7 @@ public class IOMixer {
 
 extension IOMixer: IOUnitEncoding {
     /// Starts encoding for video and audio data.
-    public func startEncoding(_ delegate: AVCodecDelegate) {
+    public func startEncoding(_ delegate: any AVCodecDelegate) {
         guard readyState == .standby else {
             return
         }
@@ -286,7 +287,7 @@ extension IOMixer: IOUnitDecoding {
 extension IOMixer: MediaLinkDelegate {
     // MARK: MediaLinkDelegate
     func mediaLink(_ mediaLink: MediaLink, dequeue sampleBuffer: CMSampleBuffer) {
-        videoIO.codec.appendSampleBuffer(sampleBuffer)
+        drawable?.enqueue(sampleBuffer)
     }
 
     func mediaLink(_ mediaLink: MediaLink, didBufferingChanged: Bool) {
@@ -320,6 +321,11 @@ extension IOMixer: Running {
         NotificationCenter.default.removeObserver(self, name: UIApplication.didEnterBackgroundNotification, object: nil)
         NotificationCenter.default.removeObserver(self, name: UIApplication.didBecomeActiveNotification, object: nil)
         #endif
+        isRunning.mutate { $0 = session.isRunning }
+    }
+
+    func startCaptureSession() {
+        session.startRunning()
         isRunning.mutate { $0 = session.isRunning }
     }
 
@@ -358,20 +364,20 @@ extension IOMixer: Running {
             #else
             let isMultiCamSupported = true
             #endif
-            guard let device = error.device,
-                  let format = device.videoFormat(
-                    width: sessionPreset.width ?? videoIO.codec.settings.videoSize.width,
-                    height: sessionPreset.height ?? videoIO.codec.settings.videoSize.height,
-                    isMultiCamSupported: isMultiCamSupported
-                  ), device.activeFormat != format else {
+            guard let device = error.device, let format = device.videoFormat(
+                width: sessionPreset.width ?? videoIO.codec.settings.videoSize.width,
+                height: sessionPreset.height ?? videoIO.codec.settings.videoSize.height,
+                frameRate: videoIO.frameRate,
+                isMultiCamSupported: isMultiCamSupported
+            ), device.activeFormat != format else {
                 return
             }
             do {
                 try device.lockForConfiguration()
                 device.activeFormat = format
-                if let duration = format.getFrameRate(videoIO.frameRate) {
-                    device.activeVideoMinFrameDuration = duration
-                    device.activeVideoMaxFrameDuration = duration
+                if format.isFrameRateSupported(videoIO.frameRate) {
+                    device.activeVideoMinFrameDuration = CMTime(value: 100, timescale: CMTimeScale(100 * videoIO.frameRate))
+                    device.activeVideoMaxFrameDuration = CMTime(value: 100, timescale: CMTimeScale(100 * videoIO.frameRate))
                 }
                 device.unlockForConfiguration()
                 session.startRunning()
@@ -380,13 +386,7 @@ extension IOMixer: Running {
             }
         #if os(iOS)
         case .mediaServicesWereReset:
-            guard isRunning.value else {
-                return
-            }
-            if !session.isRunning {
-                session.startRunning()
-                isRunning.mutate { $0 = session.isRunning }
-            }
+            resumeCaptureSessionIfNeeded()
         #endif
         default:
             break
@@ -429,6 +429,7 @@ extension IOMixer: Running {
 
     @objc
     private func didBecomeActive(_ notification: Notification) {
+        resumeCaptureSessionIfNeeded()
         if #available(iOS 16, *) {
             guard !session.isMultitaskingCameraAccessEnabled else {
                 return
@@ -438,6 +439,13 @@ extension IOMixer: Running {
         videoIO.multiCamCapture.attachSession(session)
     }
     #endif
+
+    private func resumeCaptureSessionIfNeeded() {
+        guard isRunning.value && !session.isRunning else {
+            return
+        }
+        delegate?.mixerSessionWillResume(self)
+    }
 }
 #else
 extension IOMixer: Running {
@@ -445,6 +453,9 @@ extension IOMixer: Running {
     }
 
     public func stopRunning() {
+    }
+
+    func startCaptureSession() {
     }
 }
 #endif

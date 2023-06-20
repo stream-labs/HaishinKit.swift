@@ -21,6 +21,8 @@ public protocol NetStreamDelegate: AnyObject {
     func stream(_ stream: NetStream, videoCodecErrorOccurred error: VideoCodec.Error)
     /// Tells the receiver to audio codec error occured.
     func stream(_ stream: NetStream, audioCodecErrorOccurred error: AudioCodec.Error)
+    /// Tells the receiver to will drop video frame.
+    func streamWillDropFrame(_ stream: NetStream) -> Bool
     /// Tells the receiver to the stream opened.
     func streamDidOpen(_ stream: NetStream)
     func streamDidChangeReadyState(_ stream: NetStream, _ state: RTMPStream.ReadyState)
@@ -40,9 +42,13 @@ open class NetStream: NSObject {
     private static let queueValue = UnsafeMutableRawPointer.allocate(byteCount: 1, alignment: 1)
 
     /// The mixer object.
-    public private(set) var mixer = IOMixer()
+    public private(set) lazy var mixer: IOMixer = {
+        let mixer = IOMixer()
+        mixer.delegate = self
+        return mixer
+    }()
     /// Specifies the delegate of the NetStream.
-    public weak var delegate: NetStreamDelegate?
+    public weak var delegate: (any NetStreamDelegate)?
 
     /// Specifies the context object.
     public var context: CIContext {
@@ -230,7 +236,7 @@ open class NetStream: NSObject {
     /// Append a CMSampleBuffer?.
     /// - Warning: This method can't use attachCamera or attachAudio method at the same time.
     open func appendSampleBuffer(_ sampleBuffer: CMSampleBuffer, options: [NSObject: AnyObject]? = nil) {
-        switch sampleBuffer.formatDescription?.legacyMediaType {
+        switch sampleBuffer.formatDescription?._mediaType {
         case kCMMediaType_Audio:
             mixer.audioIO.lockQueue.async {
                 self.mixer.audioIO.appendSampleBuffer(sampleBuffer)
@@ -273,7 +279,7 @@ open class NetStream: NSObject {
     }
 
     /// Starts recording.
-    public func startRecording(_ settings: [AVMediaType: [String: Any]]) {
+    public func startRecording(_ settings: [AVMediaType: [String: Any]] = IORecorder.defaultOutputSettings) {
         mixer.recorder.outputSettings = settings
         mixer.recorder.startRunning()
     }
@@ -284,9 +290,36 @@ open class NetStream: NSObject {
     }
 }
 
+extension NetStream: IOMixerDelegate {
+    // MARK: IOMixerDelegate
+    func mixer(_ mixer: IOMixer, didOutput video: CMSampleBuffer) {
+        delegate?.stream(self, didOutput: video)
+    }
+
+    func mixer(_ mixer: IOMixer, didOutput audio: AVAudioPCMBuffer, presentationTimeStamp: CMTime) {
+        delegate?.stream(self, didOutput: audio, presentationTimeStamp: presentationTimeStamp)
+    }
+
+    func mixerSessionWillResume(_ mixer: IOMixer) {
+        lockQueue.async {
+            mixer.startCaptureSession()
+        }
+    }
+
+    #if os(iOS)
+    func mixer(_ mixer: IOMixer, sessionWasInterrupted session: AVCaptureSession, reason: AVCaptureSession.InterruptionReason) {
+        delegate?.stream(self, sessionWasInterrupted: session, reason: reason)
+    }
+
+    func mixer(_ mixer: IOMixer, sessionInterruptionEnded session: AVCaptureSession, reason: AVCaptureSession.InterruptionReason) {
+        delegate?.stream(self, sessionInterruptionEnded: session, reason: reason)
+    }
+    #endif
+}
+
 extension NetStream: IOScreenCaptureUnitDelegate {
     // MARK: IOScreenCaptureUnitDelegate
-    public func session(_ session: IOScreenCaptureUnit, didOutput pixelBuffer: CVPixelBuffer, presentationTime: CMTime) {
+    public func session(_ session: any IOScreenCaptureUnit, didOutput pixelBuffer: CVPixelBuffer, presentationTime: CMTime) {
         var timingInfo = CMSampleTimingInfo(
             duration: .invalid,
             presentationTimeStamp: presentationTime,

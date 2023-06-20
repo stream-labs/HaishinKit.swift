@@ -2,13 +2,15 @@
 
 Private fork of https://github.com/shogo4405/HaishinKit.swift
 
-[![Platform](https://img.shields.io/cocoapods/p/HaishinKit.svg?style=flat)](http://cocoapods.org/pods/HaishinKit)
-![Language](https://img.shields.io/badge/language-Swift%205.3-orange.svg)
-[![CocoaPods](https://img.shields.io/cocoapods/v/HaishinKit.svg?style=flat)](http://cocoapods.org/pods/HaishinKit)
+[![GitHub Stars](https://img.shields.io/github/stars/shogo4405/HaishinKit.swift?style=social)](https://github.com/shogo4405/HaishinKit.swift/stargazers)
+[![Release](https://img.shields.io/github/v/release/shogo4405/HaishinKit.swift)](https://github.com/shogo4405/HaishinKit.swift/releases/latest)
+[![Platform Compatibility](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fshogo4405%2FHaishinKit.swift%2Fbadge%3Ftype%3Dplatforms)](https://swiftpackageindex.com/shogo4405/HaishinKit.swift)
+[![Swift Compatibility](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fshogo4405%2FHaishinKit.swift%2Fbadge%3Ftype%3Dswift-versions)](https://swiftpackageindex.com/shogo4405/HaishinKit.swift)
 [![GitHub license](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://raw.githubusercontent.com/shogo4405/HaishinKit.swift/master/LICENSE.md)
 
 * Camera and Microphone streaming library via RTMP, HLS for iOS, macOS, tvOS.
-* [API Documentation](https://shogo4405.github.io/HaishinKit.swift/)
+* README.md contains unreleased content, which can be tested on the main branch.
+* [API Documentation](https://shogo4405.github.io/HaishinKit.swift/documentation/haishinkit)
 
 <p align="center">
 <strong>Sponsored with 💖 by</strong><br />
@@ -36,10 +38,17 @@ Enterprise Grade APIs for Feeds & Chat. <a href="https://getstream.io/tutorials/
 <a href="https://streamlabs.com/" target="_blank"><img src="https://user-images.githubusercontent.com/810189/206836172-9c360977-ab6b-4eff-860b-82d0e7b06318.png" width="350px" alt="Streamlabs" /></a>
 </p>
 
+## 🌏 Related projects
+Project name    |Notes       |License
+----------------|------------|--------------
+[SRTHaishinKit for iOS.](https://github.com/shogo4405/SRTHaishinKit.swift)|Camera and Microphone streaming library via SRT.|[BSD 3-Clause "New" or "Revised" License](https://github.com/shogo4405/SRTHaishinKit.swift/blob/master/LICENSE.md)
+[HaishinKit for Android.](https://github.com/shogo4405/HaishinKit.kt)|Camera and Microphone streaming library via RTMP for Android.|[BSD 3-Clause "New" or "Revised" License](https://github.com/shogo4405/HaishinKit.kt/blob/master/LICENSE.md)
+[HaishinKit for Flutter.](https://github.com/shogo4405/HaishinKit.dart)|Camera and Microphone streaming library via RTMP for Flutter.|[BSD 3-Clause "New" or "Revised" License](https://github.com/shogo4405/HaishinKit.dart/blob/master/LICENSE.md)
+
 ## 🎨 Features
 ### RTMP
 - [x] Authentication
-- [x] Publish and Recording (H264/AAC)
+- [x] Publish and Recording
 - [x] _Playback (Beta)_
 - [x] Adaptive bitrate streaming
   - [x] Handling (see also [#1153](/../../issues/1153))
@@ -52,6 +61,14 @@ Enterprise Grade APIs for Feeds & Chat. <a href="https://getstream.io/tutorials/
   - [x] _Tunneled (RTMPT over SSL/TLS) (Technical Preview)_
 - [x] _RTMPT (Technical Preview)_
 - [x] ReplayKit Live as a Broadcast Upload Extension
+- [x] Supported codec
+  - Audio
+    - [x] AAC
+  - Video
+    - [x] H264/AVC
+      - ex: `stream.videoSettings.profileLevel = kVTProfileLevel_H264_Baseline_3_1 as String`
+    - [x] H265/HEVC ([Server-side support is required.](https://github.com/veovera/enhanced-rtmp/blob/main/enhanced-rtmp-v1.pdf))
+      - ex: `stream.videoSettings.profileLevel = kVTProfileLevel_HEVC_Main_AutoLevel as String`
 
 ### HLS
 - [x] HTTPService
@@ -62,7 +79,7 @@ Supports two camera video sources. A picture-in-picture display that shows the i
 
 |Picture-In-Picture|Split|
 |:-:|:-:|
-|<img width="1382" alt="スクリーンショット 2022-12-30 15 57 38" src="https://user-images.githubusercontent.com/810189/210043421-ceb18cb7-9b50-43fa-a0a2-8b92b78d9df1.png">|<img width="1382" alt="スクリーンショット 2022-12-30 15 55 13" src="https://user-images.githubusercontent.com/810189/210043687-a99f21b6-28b2-4170-96de-6c814debd84d.png">|
+|<img width="1382" alt="" src="https://user-images.githubusercontent.com/810189/210043421-ceb18cb7-9b50-43fa-a0a2-8b92b78d9df1.png">|<img width="1382" alt="" src="https://user-images.githubusercontent.com/810189/210043687-a99f21b6-28b2-4170-96de-6c814debd84d.png">|
 
 ```swift
 let back = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back)
@@ -78,11 +95,11 @@ if #available(iOS 13.0, *) {
 |Features|[HKView](https://shogo4405.github.io/HaishinKit.swift/Classes/HKView.html)|[PiPHKView](https://shogo4405.github.io/HaishinKit.swift/Classes/PiPHKView.html)|[MTHKView](https://shogo4405.github.io/HaishinKit.swift/Classes/MTHKView.html)|
 |-|:---:|:---:|:---:|
 |Engine|AVCaptureVideoPreviewLayer|AVSampleBufferDisplayLayer|Metal|
-|Publish|◯|◯|◯|
-|Playback|×|◯|◯|
-|VisualEffect|×|◯|◯|
-|PictureInPicture|×|◯|×|
-|MultiCamera|×|◯|◯|
+|Publish|✔|✔|✔|
+|Playback|<br />|✔|✔|
+|VisualEffect|<br />|✔|✔|
+|PictureInPicture|<br />|✔|<br />|
+|MultiCamera|<br />|✔|✔|
 
 ### Others
 - [x] [Support multitasking camera access.](https://developer.apple.com/documentation/avfoundation/capture_setup/accessing_the_camera_while_multitasking)
@@ -97,10 +114,8 @@ if #available(iOS 13.0, *) {
 ## 🌏 Requirements
 |-|iOS|OSX|tvOS|Xcode|Swift|
 |:----:|:----:|:----:|:----:|:----:|:----:|
-|main|11.0+|10.13+|10.2+|14.3+|5.8+|
+|1.5.0+|11.0+|10.13+|10.2+|14.3+|5.7+|
 |1.4.0+|11.0+|10.13+|10.2+|14.0+|5.7+|
-|1.3.0+|11.0+|10.13+|10.2+|14.0+|5.7+|
-|1.2.0+|9.0+|10.11+|10.2+|13.0+|5.5+|
 
 ## 🐾 Examples
 Examples project are available for iOS with UIKit, iOS with SwiftUI, macOS and tvOS.
@@ -109,7 +124,6 @@ Examples project are available for iOS with UIKit, iOS with SwiftUI, macOS and t
 ```sh
 git clone https://github.com/shogo4405/HaishinKit.swift.git
 cd HaishinKit.swift
-git checkout refs/tags/1.4.5
 carthage bootstrap --use-xcframeworks
 open HaishinKit.xcodeproj
 ```
@@ -132,7 +146,7 @@ source 'https://github.com/CocoaPods/Specs.git'
 use_frameworks!
 
 def import_pods
-    pod 'HaishinKit', '~> 1.4.5
+    pod 'HaishinKit', '~> 1.5.2
 end
 
 target 'Your Target'  do
@@ -142,7 +156,7 @@ end
 ```
 ### Carthage
 ```
-github "shogo4405/HaishinKit.swift" ~> 1.4.5
+github "shogo4405/HaishinKit.swift" ~> 1.5.2
 ```
 ### Swift Package Manager
 ```
@@ -211,18 +225,21 @@ stream.videoCapture(for: 0).preferredVideoStabilizationMode = .auto
 // rtmpStream.videoCapture(for: 1).isVideoMirrored = false
 
 // Specifies the audio codec settings.
-stream.audioSettings = [
-  .bitrate: 32 * 1000,
-]
+stream.audioSettings = AudioCodecSettings(
+  bitRate: 64 * 1000
+)
 
 // Specifies the video codec settings.
-stream.videoSettings = [
-  .width: 640, // video output width
-  .height: 360, // video output height
-  .bitrate: 160 * 1000, // video output bitrate
-  .profileLevel: kVTProfileLevel_H264_Baseline_3_1, // H264 Profile require "import VideoToolbox"
-  .maxKeyFrameIntervalDuration: 2, // key frame / sec
-]
+stream.videoSettings = VideoCodecSettings(
+  videoSize: .init(width: 854, height: 480),
+  profileLevel: kVTProfileLevel_H264_Baseline_3_1 as String,
+  bitRate: 640 * 1000,
+  maxKeyFrameIntervalDuration: 2,
+  scalingMode: .trim,
+  bitRateMode: .average,
+  allowFrameReordering: nil,
+  isHardwareEncoderEnabled: true
+)
 
 // Specifies the recording settings. 0" means the same of input.
 stream.startRecording([
@@ -283,7 +300,7 @@ connection.connect("rtmp://username:password@localhost/appName/instanceName")
 ```swift
 // iOS
 let screen = IOUIScreenCaptureUnit(shared: UIApplication.shared)
-screen.delegate = rtmpStream
+screen.delegate = stream
 screen.startRunning()
 
 // macOS

@@ -30,7 +30,7 @@ final class RTMPNWSocket: RTMPSocketCompatible {
     }
     var qualityOfService: DispatchQoS = .default
     var inputBuffer = Data()
-    weak var delegate: RTMPSocketDelegate?
+    weak var delegate: (any RTMPSocketDelegate)?
 
     private(set) var queueBytesOut: Atomic<Int64> = .init(0)
     private(set) var totalBytesIn: Atomic<Int64> = .init(0)
@@ -54,15 +54,16 @@ final class RTMPNWSocket: RTMPSocketCompatible {
     private var connection: NWConnection? {
         didSet {
             oldValue?.stateUpdateHandler = nil
-            oldValue?.forceCancel()
+            oldValue?.cancel()
             if connection == nil {
                 connected = false
+                readyState = .closed
             }
         }
     }
     private var parameters: NWParameters = .tcp
-    private lazy var inputQueue = DispatchQueue(label: "com.haishinkit.HaishinKit.NWSocket.input", qos: qualityOfService)
-    private lazy var outputQueue = DispatchQueue(label: "com.haishinkit.HaishinKit.NWSocket.output", qos: qualityOfService)
+    private lazy var inputQueue = DispatchQueue(label: "com.haishinkit.HaishinKit.RTMPNWSocket.input", qos: qualityOfService)
+    private lazy var outputQueue = DispatchQueue(label: "com.haishinkit.HaishinKit.RTMPNWSocket.output", qos: qualityOfService)
     private var timeoutHandler: DispatchWorkItem?
 
     func connect(withName: String, port: Int) {
@@ -93,7 +94,7 @@ final class RTMPNWSocket: RTMPSocketCompatible {
     }
 
     func close(isDisconnected: Bool) {
-        guard connection != nil else {
+        guard let connection else {
             return
         }
         if isDisconnected {
@@ -102,11 +103,17 @@ final class RTMPNWSocket: RTMPSocketCompatible {
             events.append(Event(type: .rtmpStatus, bubbles: false, data: data))
         }
         readyState = .closing
-        timeoutHandler?.cancel()
-        
-        outputQueue.asyncAfter(deadline: .now() + 3) {
+        if connection.state == .ready {
+            outputQueue.async {
+                let completion: NWConnection.SendCompletion = .contentProcessed { (_: Error?) in
+                    self.connection = nil
+                }
+                connection.send(content: nil, contentContext: .finalMessage, isComplete: true, completion: completion)
+            }
+        } else {
             self.connection = nil
         }
+        timeoutHandler?.cancel()
     }
 
     @discardableResult
@@ -198,7 +205,7 @@ final class RTMPNWSocket: RTMPSocketCompatible {
             }
             inputBuffer.removeAll()
             readyState = .handshakeDone
-        case .handshakeDone:
+        case .handshakeDone, .closing:
             if inputBuffer.isEmpty {
                 break
             }

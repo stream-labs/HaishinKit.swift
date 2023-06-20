@@ -6,6 +6,73 @@ public struct VideoCodecSettings: Codable {
     /// The defulat value.
     public static let `default` = VideoCodecSettings()
 
+    /// A bitRate mode that affectes how to encode the video source.
+    public enum BitRateMode: String, Codable {
+        /// The average bit rate.
+        case average
+        /// The constant bit rate.
+        @available(iOS 16.0, tvOS 16.0, macOS 13.0, *)
+        case constant
+
+        var key: VTSessionOptionKey {
+            if #available(iOS 16.0, tvOS 16.0, macOS 13.0, *) {
+                switch self {
+                case .average:
+                    return .averageBitRate
+                case .constant:
+                    return .constantBitRate
+                }
+            }
+            return .averageBitRate
+        }
+    }
+
+    /**
+     * The scaling mode.
+     * - seealso: https://developer.apple.com/documentation/videotoolbox/kvtpixeltransferpropertykey_scalingmode
+     * - seealso: https://developer.apple.com/documentation/videotoolbox/vtpixeltransfersession/pixel_transfer_properties/scaling_mode_constants
+     */
+    public enum ScalingMode: String, Codable {
+        /// kVTScalingMode_Normal
+        case normal = "Normal"
+        /// kVTScalingMode_Letterbox
+        case letterbox = "Letterbox"
+        /// kVTScalingMode_CropSourceToCleanAperture
+        case cropSourceToCleanAperture = "CropSourceToCleanAperture"
+        /// kVTScalingMode_Trim
+        case trim = "Trim"
+    }
+
+    /// The type of the VideoCodec supports format.
+    enum Format: Codable {
+        case h264
+        case hevc
+
+        #if os(macOS)
+        var encoderID: NSString {
+            switch self {
+            case .h264:
+                #if arch(arm64)
+                return NSString(string: "com.apple.videotoolbox.videoencoder.ave.avc")
+                #else
+                return NSString(string: "com.apple.videotoolbox.videoencoder.h264.gva")
+                #endif
+            case .hevc:
+                return NSString(string: "com.apple.videotoolbox.videoencoder.ave.hevc")
+            }
+        }
+        #endif
+
+        var codecType: UInt32 {
+            switch self {
+            case .h264:
+                return kCMVideoCodecType_H264
+            case .hevc:
+                return kCMVideoCodecType_HEVC
+            }
+        }
+    }
+
     /// Specifies the video size of encoding video.
     public var videoSize: VideoSize
     /// Specifies the bitrate.
@@ -18,13 +85,22 @@ public struct VideoCodecSettings: Codable {
     /// Specifies the allowFrameRecording.
     public var allowFrameReordering: Bool?
     /// Specifies the bitRateMode.
-    public var bitRateMode: VideoCodec.BitRateMode
+    public var bitRateMode: BitRateMode
     /// Specifies the H264 profileLevel.
-    public var profileLevel: String
-    /// Specifies  the HardwareEncoder is enabled(TRUE), or not(FALSE) for macOS.
+    public var profileLevel: String {
+        didSet {
+            if profileLevel.contains("HEVC") {
+                format = .hevc
+            } else {
+                format = .h264
+            }
+        }
+    }
+    /// Specifies the HardwareEncoder is enabled(TRUE), or not(FALSE) for macOS.
     public var isHardwareEncoderEnabled = true
 
-    var expectedFrameRate: Float64 = 30
+    var format: Format = .h264
+    var expectedFrameRate: Float64 = IOMixer.defaultFrameRate
 
     /// Creates a new VideoCodecSettings instance.
     public init(
@@ -33,7 +109,7 @@ public struct VideoCodecSettings: Codable {
         bitRate: UInt32 = 640 * 1000,
         maxKeyFrameIntervalDuration: Int32 = 2,
         scalingMode: ScalingMode = .trim,
-        bitRateMode: VideoCodec.BitRateMode = .average,
+        bitRateMode: BitRateMode = .average,
         allowFrameReordering: Bool? = nil,
         isHardwareEncoderEnabled: Bool = true
     ) {
@@ -45,6 +121,9 @@ public struct VideoCodecSettings: Codable {
         self.bitRateMode = bitRateMode
         self.allowFrameReordering = allowFrameReordering
         self.isHardwareEncoderEnabled = isHardwareEncoderEnabled
+        if profileLevel.contains("HEVC") {
+            self.format = .hevc
+        }
     }
 
     func invalidateSession(_ rhs: VideoCodecSettings) -> Bool {
@@ -59,12 +138,6 @@ public struct VideoCodecSettings: Codable {
     }
 
     func apply(_ codec: VideoCodec, rhs: VideoCodecSettings) {
-        if expectedFrameRate != rhs.expectedFrameRate {
-            let option = VTSessionOption(key: .expectedFrameRate, value: NSNumber(value: expectedFrameRate))
-            if let status = codec.session?.setOption(option), status != noErr {
-                codec.delegate?.videoCodec(codec, errorOccurred: .failedToSetOption(status: status, option: option))
-            }
-        }
         if bitRate != rhs.bitRate {
             let option = VTSessionOption(key: bitRateMode.key, value: NSNumber(value: bitRate))
             if let status = codec.session?.setOption(option), status != noErr {
@@ -79,7 +152,8 @@ public struct VideoCodecSettings: Codable {
             .init(key: .realTime, value: kCFBooleanTrue),
             .init(key: .profileLevel, value: profileLevel as NSObject),
             .init(key: bitRateMode.key, value: NSNumber(value: bitRate)),
-            .init(key: .expectedFrameRate, value: NSNumber(value: expectedFrameRate)),
+            // It seemes that VT supports the range 0 to 30.
+            .init(key: .expectedFrameRate, value: NSNumber(value: (expectedFrameRate <= 30) ? expectedFrameRate : 0)),
             .init(key: .maxKeyFrameIntervalDuration, value: NSNumber(value: maxKeyFrameIntervalDuration)),
             .init(key: .allowFrameReordering, value: (allowFrameReordering ?? !isBaseline) as NSObject),
             .init(key: .pixelTransferProperties, value: [
@@ -88,7 +162,7 @@ public struct VideoCodecSettings: Codable {
         ])
         #if os(macOS)
         if isHardwareEncoderEnabled {
-            options.insert(.init(key: .encoderID, value: VideoCodec.encoderName))
+            options.insert(.init(key: .encoderID, value: format.encoderID))
             options.insert(.init(key: .enableHardwareAcceleratedVideoEncoder, value: kCFBooleanTrue))
             options.insert(.init(key: .requireHardwareAcceleratedVideoEncoder, value: kCFBooleanTrue))
         }

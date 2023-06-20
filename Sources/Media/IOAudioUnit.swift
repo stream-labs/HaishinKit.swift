@@ -60,7 +60,7 @@ final class IOAudioUnit: NSObject, IOUnit {
         if isFragmented(sampleBuffer), let sampleBuffer = makeSampleBuffer(sampleBuffer) {
             appendSampleBuffer(sampleBuffer)
         }
-        mixer?.recorder.appendSampleBuffer(sampleBuffer, mediaType: .audio)
+        mixer?.recorder.appendSampleBuffer(sampleBuffer)
         codec.appendSampleBuffer(sampleBuffer)
         presentationTimeStamp = CMTimeAdd(presentationTimeStamp, CMTime(value: CMTimeValue(sampleBuffer.numSamples), timescale: presentationTimeStamp.timescale))
     }
@@ -86,57 +86,13 @@ final class IOAudioUnit: NSObject, IOUnit {
         guard 0 < numSamples else {
             return nil
         }
-        var status: OSStatus = noErr
-        var sampleBuffer: CMSampleBuffer?
-        var timing = CMSampleTimingInfo(
-            duration: CMTime(value: 1, timescale: presentationTimeStamp.timescale),
-            presentationTimeStamp: presentationTimeStamp,
-            decodeTimeStamp: .invalid
-        )
-        status = CMSampleBufferCreate(
-            allocator: kCFAllocatorDefault,
-            dataBuffer: nil,
-            dataReady: true,
-            makeDataReadyCallback: nil,
-            refcon: nil,
-            formatDescription: buffer.formatDescription,
-            sampleCount: numSamples,
-            sampleTimingEntryCount: 1,
-            sampleTimingArray: &timing,
-            sampleSizeEntryCount: 0,
-            sampleSizeArray: nil,
-            sampleBufferOut: &sampleBuffer
-        )
-        guard
-            let sampleBuffer = sampleBuffer,
-            let formatDescription = sampleBuffer.formatDescription, status == noErr else {
-            return nil
-        }
-        var pcmFormat: AVAudioFormat?
-        if #available(iOS 13.0, *), Int(buffer.formatDescription?.audioStreamBasicDescription?.mSampleRate ?? 0) == numSamples {
-            pcmFormat = AVAudioFormat(cmAudioFormatDescription: formatDescription)
-        }
-        guard let pcmFormat, let buffer = AVAudioPCMBuffer(pcmFormat: pcmFormat, frameCapacity: AVAudioFrameCount(numSamples)) else {
-            return nil
-        }
-        buffer.frameLength = buffer.frameCapacity
-        status = CMSampleBufferSetDataBufferFromAudioBufferList(
-            sampleBuffer,
-            blockBufferAllocator: kCFAllocatorDefault,
-            blockBufferMemoryAllocator: kCFAllocatorDefault,
-            flags: 0,
-            bufferList: buffer.audioBufferList
-        )
-        guard status == noErr else {
-            return nil
-        }
-        return sampleBuffer
+        return CMAudioSampleBufferUtil.makeSampleBuffer(buffer, numSamples: numSamples, presentationTimeStamp: presentationTimeStamp)
     }
 }
 
 extension IOAudioUnit: IOUnitEncoding {
     // MARK: IOUnitEncoding
-    func startEncoding(_ delegate: AVCodecDelegate) {
+    func startEncoding(_ delegate: any AVCodecDelegate) {
         codec.delegate = delegate
         codec.startRunning()
     }

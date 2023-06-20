@@ -5,7 +5,7 @@ enum VTSessionMode {
     case compression
     case decompression
 
-    func makeSession(_ videoCodec: VideoCodec) -> VTSessionConvertible? {
+    func makeSession(_ videoCodec: VideoCodec) -> (any VTSessionConvertible)? {
         switch self {
         case .compression:
             var session: VTCompressionSession?
@@ -13,7 +13,7 @@ enum VTSessionMode {
                 allocator: kCFAllocatorDefault,
                 width: videoCodec.settings.videoSize.width,
                 height: videoCodec.settings.videoSize.height,
-                codecType: kCMVideoCodecType_H264,
+                codecType: videoCodec.settings.format.codecType,
                 encoderSpecification: nil,
                 imageBufferAttributes: videoCodec.attributes as CFDictionary?,
                 compressedDataAllocator: nil,

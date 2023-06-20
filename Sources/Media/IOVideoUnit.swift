@@ -21,7 +21,7 @@ final class IOVideoUnit: NSObject, IOUnit {
         }
     }
 
-    weak var drawable: NetStreamDrawable? {
+    weak var drawable: (any NetStreamDrawable)? {
         didSet {
             #if os(iOS) || os(macOS)
             drawable?.videoOrientation = videoOrientation
@@ -132,6 +132,17 @@ final class IOVideoUnit: NSObject, IOUnit {
         guard let mixer, self.capture.device != device else {
             return
         }
+        guard let device else {
+            mixer.mediaSync = .passthrough
+            mixer.session.beginConfiguration()
+            defer {
+                mixer.session.commitConfiguration()
+            }
+            capture.detachSession(mixer.session)
+            try capture.attachDevice(nil, videoUnit: self)
+            return
+        }
+        mixer.mediaSync = .video
         mixer.session.beginConfiguration()
         defer {
             mixer.session.commitConfiguration()
@@ -139,11 +150,6 @@ final class IOVideoUnit: NSObject, IOUnit {
                 setTorchMode(.on)
             }
         }
-        guard let device else {
-            mixer.mediaSync = .passthrough
-            return
-        }
-        mixer.mediaSync = .video
         if multiCamCapture.device == device {
             try multiCamCapture.attachDevice(nil, videoUnit: self)
         }
@@ -282,7 +288,7 @@ final class IOVideoUnit: NSObject, IOUnit {
 
 extension IOVideoUnit: IOUnitEncoding {
     // MARK: IOUnitEncoding
-    func startEncoding(_ delegate: AVCodecDelegate) {
+    func startEncoding(_ delegate: any AVCodecDelegate) {
         codec.delegate = delegate
         codec.startRunning()
     }
@@ -330,10 +336,14 @@ extension IOVideoUnit: VideoCodecDelegate {
     }
 
     func videoCodec(_ codec: VideoCodec, didOutput sampleBuffer: CMSampleBuffer) {
-        drawable?.enqueue(sampleBuffer)
+        mixer?.mediaLink.enqueueVideo(sampleBuffer)
     }
 
     func videoCodec(_ codec: VideoCodec, errorOccurred error: VideoCodec.Error) {
         logger.trace(error)
+    }
+
+    func videoCodecWillDropFame(_ codec: VideoCodec) -> Bool {
+        return false
     }
 }

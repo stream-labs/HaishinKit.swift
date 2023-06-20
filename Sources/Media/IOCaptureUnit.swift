@@ -95,8 +95,8 @@ public class IOVideoCaptureUnit: IOCaptureUnit {
         }
     }
 
+    #if os(iOS)
     /// Specifies the preferredVideoStabilizationMode most appropriate for use with the connection.
-    @available(macOS, unavailable)
     public var preferredVideoStabilizationMode: AVCaptureVideoStabilizationMode = .off {
         didSet {
             output?.connections.filter { $0.isVideoStabilizationSupported }.forEach {
@@ -104,6 +104,7 @@ public class IOVideoCaptureUnit: IOCaptureUnit {
             }
         }
     }
+    #endif
 
     func attachDevice(_ device: AVCaptureDevice?, videoUnit: IOVideoUnit) throws {
         setSampleBufferDelegate(nil)
@@ -161,13 +162,26 @@ public class IOVideoCaptureUnit: IOCaptureUnit {
     }
 
     func setFrameRate(_ frameRate: Float64) {
-        guard let device, let duration = device.activeFormat.getFrameRate(frameRate) else {
+        guard let device else {
             return
         }
         do {
             try device.lockForConfiguration()
-            device.activeVideoMinFrameDuration = duration
-            device.activeVideoMaxFrameDuration = duration
+            if device.activeFormat.isFrameRateSupported(frameRate) {
+                device.activeVideoMinFrameDuration = CMTime(value: 100, timescale: CMTimeScale(100 * frameRate))
+                device.activeVideoMaxFrameDuration = CMTime(value: 100, timescale: CMTimeScale(100 * frameRate))
+            } else {
+                if let format = device.videoFormat(
+                    width: device.activeFormat.formatDescription.dimensions.width,
+                    height: device.activeFormat.formatDescription.dimensions.height,
+                    frameRate: frameRate,
+                    isMultiCamSupported: device.activeFormat.isMultiCamSupported
+                ) {
+                    device.activeFormat = format
+                    device.activeVideoMinFrameDuration = CMTime(value: 100, timescale: CMTimeScale(100 * frameRate))
+                    device.activeVideoMaxFrameDuration = CMTime(value: 100, timescale: CMTimeScale(100 * frameRate))
+                }
+            }
             device.unlockForConfiguration()
         } catch {
             logger.error("while locking device for fps:", error)
