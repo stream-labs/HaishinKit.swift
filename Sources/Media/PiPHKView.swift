@@ -4,7 +4,7 @@ import Foundation
 import UIKit
 
 /// A view that displays a video content of a NetStream object which uses AVSampleBufferDisplayLayer api.
-public class PiPHKView: UIView {
+open class PiPHKView: UIView {
     /// The view’s background color.
     public static var defaultBackgroundColor: UIColor = .black
 
@@ -108,7 +108,7 @@ import AppKit
 import AVFoundation
 
 /// A view that displays a video content of a NetStream object which uses AVSampleBufferDisplayLayer api.
-public class PiPHKView: NSView {
+open class PiPHKView: NSView {
     /// The view’s background color.
     public static var defaultBackgroundColor: NSColor = .black
 
