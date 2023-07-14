@@ -419,6 +419,12 @@ open class RTMPStream: NetStream {
             self.info.byteCount.mutate { $0 += Int64(length) }
         }
     }
+    
+    open func clearDataStamp(handlerName: String) {
+        lockQueue.async {
+            self.dataTimeStamps[handlerName] = nil
+        }
+    }
 
     /// Creates flv metadata for a stream.
     open func createMetaData() -> ASObject {
@@ -468,6 +474,7 @@ open class RTMPStream: NetStream {
     }
     
     open func sendMetadata() {
+        clearDataStamp(handlerName: "@setDataFrame")
         send(handlerName: "@setDataFrame", arguments: "onMetaData", createMetaData())
     }
 
