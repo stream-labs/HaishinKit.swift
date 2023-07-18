@@ -183,7 +183,7 @@ public class IOMixer {
                 audioIO.codec.appendSampleBuffer(sampleBuffer)
             case kCMMediaType_Video:
                 videoIO.codec.formatDescription = sampleBuffer.formatDescription
-                mediaLink.enqueueVideo(sampleBuffer)
+                videoIO.codec.appendSampleBuffer(sampleBuffer)
             default:
                 break
             }
@@ -287,6 +287,7 @@ extension IOMixer: IOUnitDecoding {
 extension IOMixer: MediaLinkDelegate {
     // MARK: MediaLinkDelegate
     func mediaLink(_ mediaLink: MediaLink, dequeue sampleBuffer: CMSampleBuffer) {
+        delegate?.mixer(self, didOutput: sampleBuffer)
         drawable?.enqueue(sampleBuffer)
     }
 

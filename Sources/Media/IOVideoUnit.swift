@@ -69,10 +69,6 @@ final class IOVideoUnit: NSObject, IOUnit {
     #if os(iOS) || os(macOS)
     var frameRate = IOMixer.defaultFrameRate {
         didSet {
-            guard frameRate != oldValue else {
-                return
-            }
-            codec.settings.expectedFrameRate = frameRate
             capture.setFrameRate(frameRate)
             multiCamCapture.setFrameRate(frameRate)
         }

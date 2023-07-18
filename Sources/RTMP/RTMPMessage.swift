@@ -344,7 +344,7 @@ final class RTMPCommandMessage: RTMPMessage {
 			isNamedResult = false
 		}
 
-        guard let responder: RTMPResponder = connection.operations.removeValue(forKey: id) else {
+        guard let responder = connection.operations.removeValue(forKey: id) else {
             switch commandName {
             case "close":
                 connection.close(isDisconnected: true)
