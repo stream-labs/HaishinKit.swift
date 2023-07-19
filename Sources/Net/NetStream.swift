@@ -170,6 +170,15 @@ open class NetStream: NSObject {
         }
     }
 
+    /// Creates a NetStream object.
+    override public init() {
+        super.init()
+        #if os(iOS)
+        NotificationCenter.default.addObserver(self, selector: #selector(didEnterBackground(_:)), name: UIApplication.didEnterBackgroundNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(willEnterForeground(_:)), name: UIApplication.willEnterForegroundNotification, object: nil)
+        #endif
+    }
+
     #if os(iOS) || os(macOS)
     /// Attaches the primary camera object.
     /// - Warning: This method can't use appendSampleBuffer at the same time.
@@ -295,6 +304,21 @@ open class NetStream: NSObject {
     public func invalidateCompressionSession() {
         mixer.videoIO.codec.invalidateCompressionSession()
     }
+
+    #if os(iOS)
+    @objc
+    private func didEnterBackground(_ notification: Notification) {
+        // Require main thread. Otherwise the microphone cannot be used in the background.
+        mixer.inBackgroundMode = true
+    }
+
+    @objc
+    private func willEnterForeground(_ notification: Notification) {
+        lockQueue.async {
+            self.mixer.inBackgroundMode = false
+        }
+    }
+    #endif
 }
 
 extension NetStream: IOMixerDelegate {
@@ -305,12 +329,6 @@ extension NetStream: IOMixerDelegate {
 
     func mixer(_ mixer: IOMixer, didOutput audio: AVAudioPCMBuffer, presentationTimeStamp: CMTime) {
         delegate?.stream(self, didOutput: audio, presentationTimeStamp: presentationTimeStamp)
-    }
-
-    func mixerSessionWillResume(_ mixer: IOMixer) {
-        lockQueue.async {
-            mixer.startCaptureSession()
-        }
     }
 
     #if os(iOS)
