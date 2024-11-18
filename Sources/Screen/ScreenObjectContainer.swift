@@ -48,7 +48,7 @@ public class ScreenObjectContainer: ScreenObject, ScreenObjectContainerConvertib
         invalidateLayout()
     }
 
-    override func layout(_ renderer: some ScreenRenderer) {
+    override public func layout(_ renderer: some ScreenRenderer) {
         bounds = makeBounds(size)
         children.forEach { child in
             if child.shouldInvalidateLayout || shouldInvalidateLayout {
@@ -58,7 +58,7 @@ public class ScreenObjectContainer: ScreenObject, ScreenObjectContainerConvertib
         shouldInvalidateLayout = false
     }
 
-    override func draw(_ renderer: some ScreenRenderer) {
+    override public func draw(_ renderer: some ScreenRenderer) {
         guard isVisible else {
             return
         }

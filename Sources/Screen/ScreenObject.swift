@@ -133,13 +133,13 @@ open class ScreenObject {
         return .init(x: x, y: y, width: width, height: height)
     }
 
-    func layout(_ renderer: some ScreenRenderer) {
+    open func layout(_ renderer: some ScreenRenderer) {
         bounds = makeBounds(size)
         renderer.layout(self)
         shouldInvalidateLayout = false
     }
 
-    func draw(_ renderer: some ScreenRenderer) {
+    open func draw(_ renderer: some ScreenRenderer) {
         renderer.draw(self)
     }
 }
@@ -503,7 +503,7 @@ public final class AssetScreenObject: ScreenObject, ChromaKeyProcessable {
         return renderer.context.createCGImage(image, from: videoGravity.region(bounds, image: image.extent))
     }
 
-    override func draw(_ renderer: some ScreenRenderer) {
+    public override func draw(_ renderer: some ScreenRenderer) {
         super.draw(renderer)
         let duration = CMClock.hostTimeClock.time - startedAt
         if let sampleBuffer, sampleBuffer.presentationTimeStamp <= duration {
